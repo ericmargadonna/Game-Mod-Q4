@@ -7468,7 +7468,7 @@ void idPlayer::CrashLand( const idVec3 &oldOrigin, const idVec3 &oldVelocity ) {
 	}
 
 	// no falling damage if touching a nodamage surface
- 	noDamage = false;
+ 	noDamage = true;
 	for ( int i = 0; i < physicsObj.GetNumContacts(); i++ ) {
 		const contactInfo_t &contact = physicsObj.GetContact( i );
 		if ( contact.material->GetSurfaceFlags() & SURF_NODAMAGE ) {
@@ -7544,7 +7544,8 @@ void idPlayer::CrashLand( const idVec3 &oldOrigin, const idVec3 &oldVelocity ) {
 
 	// ddynerman: moved height delta selection to player def
 	if ( delta > fatalFallDelta && fatalFallDelta > 0.0f ) {
-		pfl.hardLanding = true;
+		//pfl.hardLanding = true;
+		pfl.softLanding = true;
 		landChange = -32;
 		landTime = gameLocal.time;
  		if ( !noDamage ) {
@@ -7552,7 +7553,8 @@ void idPlayer::CrashLand( const idVec3 &oldOrigin, const idVec3 &oldVelocity ) {
  			Damage( NULL, NULL, idVec3( 0, 0, -1 ), "damage_fatalfall", 1.0f, 0 );
  		}
 	} else if ( delta > hardFallDelta && hardFallDelta > 0.0f ) {
-		pfl.hardLanding = true;
+		//pfl.hardLanding = true;
+		pfl.softLanding = true;
 		landChange	= -24;
 		landTime	= gameLocal.time;
  		if ( !noDamage ) {
@@ -10150,10 +10152,14 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 	knockback *= damageScale;
 
 	if ( knockback != 0 && !fl.noknockback ) {
-		if ( !gameLocal.isMultiplayer && attacker == this ) {
+		// Eric Margadonna
+		// I wanna rocketjump!
+		
+		//if ( !gameLocal.isMultiplayer && attacker == this ) {
 			//In SP, no knockback from your own stuff
-			knockback = 0;
-		} else {
+		//	knockback = 0;
+		//} else {
+
 			if ( attacker != this ) {
 				attackerPushScale = 1.0f;	
 			} else {
@@ -10171,7 +10177,8 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 			// set the timer so that the player can't cancel out the movement immediately
  			physicsObj.SetKnockBack( idMath::ClampInt( 50, 200, knockback * 2 ) );
 		}
-	}
+
+	//}
 	
 	if ( damageDef->dict.GetBool( "burn" ) ) {
 		StartSound( "snd_burn", SND_CHANNEL_BODY3, 0, false, NULL );
