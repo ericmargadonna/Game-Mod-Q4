@@ -2,6 +2,8 @@
 // bdube: note that this file is no longer merged with Doom3 updates
 //
 // MERGE_DATE 09/30/2004
+//Eric Margadonna
+//Edited to create QuakeLanes Mod
 
 #include "../idlib/precompiled.h"
 #pragma hdrstop
