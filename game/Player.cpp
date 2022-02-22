@@ -1681,7 +1681,8 @@ void idPlayer::Init( void ) {
 
 	//Eric Margadonna
 	//(2/8/22) No fall damage!
-	pfl.noFallingDamage = true;
+	//true -> false 2/22
+	pfl.noFallingDamage = false;
 
 	// Start in idle
 	SetAnimState( ANIMCHANNEL_TORSO, "Torso_Idle", 0 );
@@ -1834,9 +1835,7 @@ void idPlayer::Spawn( void ) {
 	// set our collision model
 	physicsObj.SetSelf( this );
 	SetClipModel( );
-	//Eric Margadonna
-	//Less massive player
-	physicsObj.SetMass( 50.0f ); //spawnArgs.GetFloat( "mass", "100" ) );
+	physicsObj.SetMass( spawnArgs.GetFloat( "mass", "100" ) );
 	physicsObj.SetContents( CONTENTS_BODY | (use_combat_bbox?CONTENTS_SOLID:0) );
 	physicsObj.SetClipMask( MASK_PLAYERSOLID );
 	SetPhysics( &physicsObj );
@@ -2029,7 +2028,7 @@ void idPlayer::Spawn( void ) {
 
 	gibSkin = declManager->FindSkin( spawnArgs.GetString( "skin_gibskin" ) );
 
-	// Skil levels
+	// Skill levels
 	dynamicProtectionScale = 1.0f;
 	if ( !gameLocal.isMultiplayer ) {
 		if ( g_skill.GetInteger() < 2 ) {
@@ -10163,13 +10162,10 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 	knockback *= damageScale;
 
 	if ( knockback != 0 && !fl.noknockback ) {
-		// Eric Margadonna
-		// I wanna rocketjump!
-		
-		//if ( !gameLocal.isMultiplayer && attacker == this ) {
+		if ( !gameLocal.isMultiplayer && attacker == this ) {
 			//In SP, no knockback from your own stuff
-		//	knockback = 0;
-		//} else {
+			knockback = 0;
+		} else {
 
 			if ( attacker != this ) {
 				attackerPushScale = 1.0f;	
@@ -10278,12 +10274,6 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 
 		if ( damage < 1 ) {
 			damage = 1;
-		}
-
-		//Eric Margadonna
-		//Dirty way to make godmode on all the time
-		if (damage > 0) {
-			damage = 0;
 		}
 
 		int oldHealth = health;
