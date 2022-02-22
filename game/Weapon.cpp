@@ -2516,10 +2516,7 @@ void rvWeapon::Attack( bool altAttack, int num_attacks, float spread, float fuse
 	}
 
 	// avoid all ammo considerations on an MP client
-
-	//Eric Margadonna 2/1/22 
-	//Screw it, let's just always avoid ammo considerations!
-	/*
+	
 	if ( !gameLocal.isClient ) {
 		// check if we're out of ammo or the clip is empty
 		int ammoAvail = owner->inventory.HasAmmo( ammoType, ammoRequired );
@@ -2538,7 +2535,7 @@ void rvWeapon::Attack( bool altAttack, int num_attacks, float spread, float fuse
 			gameLocal.AlertAI( owner );
 		}
 	}
-	*/
+	
 
 	// set the shader parm to the time of last projectile firing,
 	// which the gun material shaders can reference for single shot barrel glows, etc
