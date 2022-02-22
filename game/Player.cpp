@@ -1557,6 +1557,8 @@ void idPlayer::Init( void ) {
 	playerView.ClearEffects();
 
 	// damage values
+	//Eric Margadonna 
+	//May fuck with this later
 	fl.takedamage			= true;
 	ClearPain();
 
@@ -1674,7 +1676,12 @@ void idPlayer::Init( void ) {
 	// initialize the script variables
 	memset ( &pfl, 0, sizeof( pfl ) );
 	pfl.onGround = true;
-	pfl.noFallingDamage = false;
+	
+	//pfl.noFallingDamage = false;
+
+	//Eric Margadonna
+	//(2/8/22) No fall damage!
+	pfl.noFallingDamage = true;
 
 	// Start in idle
 	SetAnimState( ANIMCHANNEL_TORSO, "Torso_Idle", 0 );
@@ -1827,7 +1834,9 @@ void idPlayer::Spawn( void ) {
 	// set our collision model
 	physicsObj.SetSelf( this );
 	SetClipModel( );
-	physicsObj.SetMass( spawnArgs.GetFloat( "mass", "100" ) );
+	//Eric Margadonna
+	//Less massive player
+	physicsObj.SetMass( 50.0f ); //spawnArgs.GetFloat( "mass", "100" ) );
 	physicsObj.SetContents( CONTENTS_BODY | (use_combat_bbox?CONTENTS_SOLID:0) );
 	physicsObj.SetClipMask( MASK_PLAYERSOLID );
 	SetPhysics( &physicsObj );
@@ -2001,6 +2010,8 @@ void idPlayer::Spawn( void ) {
 	}
 
 	// ddynerman: defaults for these values are the single player fall deltas
+	//Eric Margadonna
+	//May fuck with this later
 	fatalFallDelta = spawnArgs.GetFloat("fatal_fall_delta", "65");
 	hardFallDelta = spawnArgs.GetFloat("hard_fall_delta", "45");
 	softFallDelta = spawnArgs.GetFloat("soft_fall_delta", "30");
@@ -10152,10 +10163,14 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 	knockback *= damageScale;
 
 	if ( knockback != 0 && !fl.noknockback ) {
-		if ( !gameLocal.isMultiplayer && attacker == this ) {
+		// Eric Margadonna
+		// I wanna rocketjump!
+		
+		//if ( !gameLocal.isMultiplayer && attacker == this ) {
 			//In SP, no knockback from your own stuff
-			knockback = 0;
-		} else {
+		//	knockback = 0;
+		//} else {
+
 			if ( attacker != this ) {
 				attackerPushScale = 1.0f;	
 			} else {
@@ -10173,7 +10188,8 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 			// set the timer so that the player can't cancel out the movement immediately
  			physicsObj.SetKnockBack( idMath::ClampInt( 50, 200, knockback * 2 ) );
 		}
-	}
+
+	//}
 	
 	if ( damageDef->dict.GetBool( "burn" ) ) {
 		StartSound( "snd_burn", SND_CHANNEL_BODY3, 0, false, NULL );
@@ -10262,6 +10278,12 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 
 		if ( damage < 1 ) {
 			damage = 1;
+		}
+
+		//Eric Margadonna
+		//Dirty way to make godmode on all the time
+		if (damage > 0) {
+			damage = 0;
 		}
 
 		int oldHealth = health;
