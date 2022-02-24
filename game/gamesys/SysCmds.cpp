@@ -2068,7 +2068,7 @@ static void Cmd_TestBoneFx_f( const idCmdArgs &args ) {
 
 /*
 ==================
-Cmd_TestDamage_f
+Cmd_TestDeath_f
 ==================
 */
 static void Cmd_TestDeath_f( const idCmdArgs &args ) {
@@ -3146,7 +3146,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 #ifndef	ID_DEMO_BUILD
 	cmdSystem->AddCommand( "disasmScript",			Cmd_DisasmScript_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"disassembles script" );
 // RAVEN BEGIN
-// rjohnson: removed old not taking system
+// rjohnson: removed old note taking system
 /*
 	cmdSystem->AddCommand( "recordViewNotes",		Cmd_RecordViewNotes_f,		CMD_FL_GAME|CMD_FL_CHEAT,	"record the current view position with notes" );
 	cmdSystem->AddCommand( "showViewNotes",			Cmd_ShowViewNotes_f,		CMD_FL_GAME|CMD_FL_CHEAT,	"show any view notes for the current map, successive calls will cycle to the next note" );
