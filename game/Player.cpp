@@ -1120,6 +1120,9 @@ idPlayer::idPlayer() {
 	overlayHud				= NULL;
 	overlayHudTime			= 0;
 
+	//Eric Margadonna - QL Hud
+	cardbattleHud			= NULL;
+
 	lastDmgTime				= 0;
 	deathClearContentsTime	= 0;
 	nextHealthPulse			= 0;
@@ -1557,8 +1560,6 @@ void idPlayer::Init( void ) {
 	playerView.ClearEffects();
 
 	// damage values
-	//Eric Margadonna 
-	//May fuck with this later
 	fl.takedamage			= true;
 	ClearPain();
 
@@ -1677,11 +1678,6 @@ void idPlayer::Init( void ) {
 	memset ( &pfl, 0, sizeof( pfl ) );
 	pfl.onGround = true;
 	
-	//pfl.noFallingDamage = false;
-
-	//Eric Margadonna
-	//(2/8/22) No fall damage!
-	//true -> false 2/22
 	pfl.noFallingDamage = false;
 
 	// Start in idle
@@ -1856,6 +1852,9 @@ void idPlayer::Spawn( void ) {
 		
 		objectiveSystem = NULL;
 
+		//Eric Margadonna - QL Hud
+		cardbattleHud = NULL;
+
 		if ( spawnArgs.GetString( "hud", "", temp ) ) {
 			hud = uiManager->FindGui( temp, true, false, true );
 		} else {
@@ -1868,6 +1867,13 @@ void idPlayer::Spawn( void ) {
 			} else {
 				gameLocal.Warning( "idPlayer::Spawn() - No MP hud overlay while in MP.");
 			}
+		}
+
+		//Eric Margadonna - Load QL hud
+		if (spawnArgs.GetString("cardbattlehud", "", temp)) {
+			cardbattleHud = uiManager->FindGui( temp, true, false, true );
+		} else {
+			gameLocal.Warning("Card Battle UI not found");
 		}
 
 		if ( hud ) {
@@ -2009,8 +2015,6 @@ void idPlayer::Spawn( void ) {
 	}
 
 	// ddynerman: defaults for these values are the single player fall deltas
-	//Eric Margadonna
-	//May fuck with this later
 	fatalFallDelta = spawnArgs.GetFloat("fatal_fall_delta", "65");
 	hardFallDelta = spawnArgs.GetFloat("hard_fall_delta", "45");
 	softFallDelta = spawnArgs.GetFloat("soft_fall_delta", "30");

@@ -348,6 +348,9 @@ public:
 	bool					disableHud;
 	bool					showNewObjectives;
 
+	//Eric Margadonna - QL Hud
+	idUserInterface *		cardbattleHud;
+
 	int						lastDmgTime;
 	int						deathClearContentsTime;
  	bool					doingDeathSkin;
