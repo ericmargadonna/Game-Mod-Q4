@@ -341,6 +341,8 @@ public:
  	idUserInterface *		hud;				// Common hud
 	idUserInterface *		mphud;				// hud overlay containing MP elements
 	
+	idUserInterface *		cardbattleHud;		//Eric Margadonna - QL Hud
+
 	idUserInterface *		objectiveSystem;
 	idUserInterface *		cinematicHud;
 	bool					objectiveSystemOpen;
@@ -348,8 +350,7 @@ public:
 	bool					disableHud;
 	bool					showNewObjectives;
 
-	//Eric Margadonna - QL Hud
-	idUserInterface *		cardbattleHud;
+	
 
 	int						lastDmgTime;
 	int						deathClearContentsTime;
@@ -938,6 +939,7 @@ private:
 	int						lastDamageDef;
 	idVec3					lastDamageDir;
 	int						lastDamageLocation;
+	idEntity *				lastAttacker;
 
 	int						predictedFrame;
 	idVec3					predictedOrigin;

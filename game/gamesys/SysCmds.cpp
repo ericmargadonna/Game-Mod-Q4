@@ -326,6 +326,18 @@ void Cmd_KillMonsters_f( const idCmdArgs &args ) {
 
 /*
 ==================
+Cmd_QLKill_f
+
+Kills JUST the monsters that are currently loaded, not friends, items, or spawns
+==================
+*/
+void Cmd_QLKill_f( const idCmdArgs& args ) {
+	//Eric Margadonna
+
+}
+
+/*
+==================
 Cmd_KillMovables_f
 
 Kills all the moveables in a level.

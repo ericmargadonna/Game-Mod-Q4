@@ -10066,6 +10066,7 @@ this		entity that is being damaged
 inflictor	entity that is causing the damage
 attacker	entity that caused the inflictor to damage targ
 	example: this=monster, inflictor=rocket, attacker=player
+	in this case: this=player
 
 dir			direction of the attack for knockback in global space
 
@@ -10339,6 +10340,7 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
   	lastDamageDir.Normalize();
 	lastDamageDef = damageDef->Index();
 	lastDamageLocation = location;
+	lastAttacker = inflictor;
 }
 
 /*
@@ -10346,8 +10348,7 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 idPlayer::CanPlayImpactEffect 
 =====================
 */
-bool idPlayer::CanPlayImpactEffect( idEntity* attacker, idEntity* target ) 
-{
+bool idPlayer::CanPlayImpactEffect( idEntity* attacker, idEntity* target ) {
 	if ( !gameLocal.isMultiplayer && attacker->IsType( idAI::GetClassType()) && target->IsType( idPlayer::GetClassType())) 
 	{
 		// don't display impact effects when marines on our team shoot us...
