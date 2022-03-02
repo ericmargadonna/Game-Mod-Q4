@@ -10075,78 +10075,78 @@ damageDef	an idDict with all the options for damage effects
 inflictor, attacker, dir, and point can be NULL for environmental effects
 ============
 */
-void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &dir,
-					   const char *damageDefName, const float damageScale, int location ) {
- 	idVec3		kick;
- 	int			damage;
- 	int			armorSave;
- 	int			knockback;
- 	idVec3		damage_from;
- 	float		attackerPushScale;
+void idPlayer::Damage(idEntity* inflictor, idEntity* attacker, const idVec3& dir,
+	const char* damageDefName, const float damageScale, int location) {
+	idVec3		kick;
+	int			damage;
+	int			armorSave;
+	int			knockback;
+	idVec3		damage_from;
+	float		attackerPushScale;
 
 	// RAVEN BEGIN
 	// twhitaker: difficulty levels
 	float modifiedDamageScale = damageScale;
-	
-	if ( !gameLocal.isMultiplayer ) {
-		if ( inflictor != gameLocal.world ) {
-			modifiedDamageScale *= ( 1.0f + gameLocal.GetDifficultyModifier() );
+
+	if (!gameLocal.isMultiplayer) {
+		if (inflictor != gameLocal.world) {
+			modifiedDamageScale *= (1.0f + gameLocal.GetDifficultyModifier());
 		}
 	}
 	// RAVEN END
 
-	if ( forwardDamageEnt.IsValid() ) {
-		forwardDamageEnt->Damage( inflictor, attacker, dir, damageDefName, modifiedDamageScale, location );
+	if (forwardDamageEnt.IsValid()) {
+		forwardDamageEnt->Damage(inflictor, attacker, dir, damageDefName, modifiedDamageScale, location);
 		return;
 	}
 
 	// damage is only processed on server
-	if ( gameLocal.isClient ) {
+	if (gameLocal.isClient) {
 		return;
 	}
-	
- 	if ( !fl.takedamage || noclip || spectating || gameLocal.inCinematic ) {
+
+	if (!fl.takedamage || noclip || spectating || gameLocal.inCinematic) {
 		// If in vehicle let it know that something is trying to hurt the invisible player
-		if ( IsInVehicle ( ) ) {
-			const idDict *damageDict = gameLocal.FindEntityDefDict( damageDefName, false );
-			if ( !damageDict ) {
-				gameLocal.Warning( "Unknown damageDef '%s'", damageDefName );
+		if (IsInVehicle()) {
+			const idDict* damageDict = gameLocal.FindEntityDefDict(damageDefName, false);
+			if (!damageDict) {
+				gameLocal.Warning("Unknown damageDef '%s'", damageDefName);
 				return;
 			}
-			
+
 			// If the damage def is marked as a hazard then issue a warning to the vehicle 
-			if ( damageDict->GetBool ( "hazard", "0" ) ) {
-				vehicleController.GetVehicle()->IssueHazardWarning ( );
+			if (damageDict->GetBool("hazard", "0")) {
+				vehicleController.GetVehicle()->IssueHazardWarning();
 			}
 		}
 		return;
 	}
 
-	if ( !inflictor ) {
+	if (!inflictor) {
 		inflictor = gameLocal.world;
 	}
-	if ( !attacker ) {
+	if (!attacker) {
 		attacker = gameLocal.world;
 	}
 
 	// MCG: player doesn't take friendly fire damage, except from self!
-	if ( !gameLocal.isMultiplayer && attacker != this ) {
-		if ( attacker->IsType ( idActor::GetClassType() ) && static_cast<idActor*>(attacker)->team == team ) {
+	if (!gameLocal.isMultiplayer && attacker != this) {
+		if (attacker->IsType(idActor::GetClassType()) && static_cast<idActor*>(attacker)->team == team) {
 			return;
 		}
 	}
 
-	const idDeclEntityDef *damageDef = gameLocal.FindEntityDef( damageDefName, false );
-	if ( !damageDef ) {
-		gameLocal.Warning( "Unknown damageDef '%s'", damageDefName );
+	const idDeclEntityDef* damageDef = gameLocal.FindEntityDef(damageDefName, false);
+	if (!damageDef) {
+		gameLocal.Warning("Unknown damageDef '%s'", damageDefName);
 		return;
 	}
 
- 	if ( damageDef->dict.GetBool( "ignore_player" ) ) {
- 		return;
- 	}
+	if (damageDef->dict.GetBool("ignore_player")) {
+		return;
+	}
 
-	if ( damageDef->dict.GetBool( "lightning_damage_effect" ) )
+	if (damageDef->dict.GetBool("lightning_damage_effect"))
 	{
 		lightningEffects = 0;
 		lightningNextTime = gameLocal.GetTime();
@@ -10154,193 +10154,201 @@ void idPlayer::Damage( idEntity *inflictor, idEntity *attacker, const idVec3 &di
 
 	// We pass in damageScale, because this function calculates a modified damageScale 
 	// based on g_skill, and we don't want to compensate for skill level twice.
-	CalcDamagePoints( inflictor, attacker, &damageDef->dict, damageScale, location, &damage, &armorSave );
+	CalcDamagePoints(inflictor, attacker, &damageDef->dict, damageScale, location, &damage, &armorSave);
 
 	//
 	// determine knockback
 	//
-	damageDef->dict.GetInt( "knockback", "0", knockback );
-	if( gameLocal.isMultiplayer && gameLocal.IsTeamGame() ) {
-		damageDef->dict.GetInt( "knockback_team", va( "%d", knockback ), knockback );
+	damageDef->dict.GetInt("knockback", "0", knockback);
+	if (gameLocal.isMultiplayer && gameLocal.IsTeamGame()) {
+		damageDef->dict.GetInt("knockback_team", va("%d", knockback), knockback);
 	}
 
 	knockback *= damageScale;
 
-	if ( knockback != 0 && !fl.noknockback ) {
-		if ( !gameLocal.isMultiplayer && attacker == this ) {
+	if (knockback != 0 && !fl.noknockback) {
+		if (!gameLocal.isMultiplayer && attacker == this) {
 			//In SP, no knockback from your own stuff
 			knockback = 0;
-		} else {
+		}
+		else {
 
-			if ( attacker != this ) {
-				attackerPushScale = 1.0f;	
-			} else {
-				// since default attackerDamageScale is 0.5, default attackerPushScale should be 2
-				damageDef->dict.GetFloat( "attackerPushScale", "2", attackerPushScale );
+			if (attacker != this) {
+				attackerPushScale = 1.0f;
 			}
-		
+			else {
+				// since default attackerDamageScale is 0.5, default attackerPushScale should be 2
+				damageDef->dict.GetFloat("attackerPushScale", "2", attackerPushScale);
+			}
+
 			kick = dir;
 
 			kick.Normalize();
- 			kick *= g_knockback.GetFloat() * knockback * attackerPushScale / 200.0f;
-			
-			physicsObj.SetLinearVelocity( physicsObj.GetLinearVelocity() + kick );
+			kick *= g_knockback.GetFloat() * knockback * attackerPushScale / 200.0f;
+
+			physicsObj.SetLinearVelocity(physicsObj.GetLinearVelocity() + kick);
 
 			// set the timer so that the player can't cancel out the movement immediately
- 			physicsObj.SetKnockBack( idMath::ClampInt( 50, 200, knockback * 2 ) );
+			physicsObj.SetKnockBack(idMath::ClampInt(50, 200, knockback * 2));
 		}
 
-	//}
-	
-	if ( damageDef->dict.GetBool( "burn" ) ) {
-		StartSound( "snd_burn", SND_CHANNEL_BODY3, 0, false, NULL );
-	} else if ( damageDef->dict.GetBool( "no_air" ) ) {
-		if ( !armorSave && health > 0 ) {
-			StartSound( "snd_airGasp", SND_CHANNEL_ITEM, 0, false, NULL );
+		//}
+
+		if (damageDef->dict.GetBool("burn")) {
+			StartSound("snd_burn", SND_CHANNEL_BODY3, 0, false, NULL);
 		}
-	}
+		else if (damageDef->dict.GetBool("no_air")) {
+			if (!armorSave && health > 0) {
+				StartSound("snd_airGasp", SND_CHANNEL_ITEM, 0, false, NULL);
+			}
+		}
 
-	// give feedback on the player view and audibly when armor is helping
-	inventory.armor -= armorSave;
+		// give feedback on the player view and audibly when armor is helping
+		inventory.armor -= armorSave;
 
-	if ( g_debugDamage.GetInteger() ) {
-		gameLocal.Printf( "client:%i health:%i damage:%i armor:%i\n", 
-			entityNumber, health, damage, armorSave );
-	}
+		if (g_debugDamage.GetInteger()) {
+			gameLocal.Printf("client:%i health:%i damage:%i armor:%i\n",
+				entityNumber, health, damage, armorSave);
+		}
 
-	// move the world direction vector to local coordinates
-	ClientDamageEffects ( damageDef->dict, dir, damage );
+		// move the world direction vector to local coordinates
+		ClientDamageEffects(damageDef->dict, dir, damage);
 
- 	// inform the attacker that they hit someone
- 	attacker->DamageFeedback( this, inflictor, damage );
-	
-//RAVEN BEGIN
-//asalmon: Xenon needs stats in singleplayer
+		// inform the attacker that they hit someone
+		attacker->DamageFeedback(this, inflictor, damage);
+
+		//RAVEN BEGIN
+		//asalmon: Xenon needs stats in singleplayer
 #ifndef _XENON
-	if( gameLocal.isMultiplayer )
+		if (gameLocal.isMultiplayer)
 #endif 
-	{
-//RAVEN END
-		idEntity* attacker = NULL;
+		{
+			//RAVEN END
+			idEntity* attacker = NULL;
 
-// RAVEN BEGIN
-// jnewquist: Use accessor for static class type 
-		int methodOfDeath = -1;
-		if ( inflictor->IsType( idProjectile::GetClassType() ) ) {
-// RAVEN END
-			methodOfDeath = static_cast<idProjectile*>(inflictor)->methodOfDeath;
-			attacker = static_cast<idProjectile*>(inflictor)->GetOwner();
-		} else if ( inflictor->IsType( idPlayer::Type ) ) {
-			// hitscan weapon
-			methodOfDeath = static_cast<idPlayer*>(inflictor)->GetCurrentWeapon();
-			attacker = inflictor;
+			// RAVEN BEGIN
+			// jnewquist: Use accessor for static class type 
+			int methodOfDeath = -1;
+			if (inflictor->IsType(idProjectile::GetClassType())) {
+				// RAVEN END
+				methodOfDeath = static_cast<idProjectile*>(inflictor)->methodOfDeath;
+				attacker = static_cast<idProjectile*>(inflictor)->GetOwner();
+			}
+			else if (inflictor->IsType(idPlayer::Type)) {
+				// hitscan weapon
+				methodOfDeath = static_cast<idPlayer*>(inflictor)->GetCurrentWeapon();
+				attacker = inflictor;
+			}
+
+			statManager->Damage(attacker, this, methodOfDeath, damage);
 		}
 
-		statManager->Damage( attacker, this, methodOfDeath, damage );
-	}
-		
-// RAVEN BEGIN
-// MCG - added damage over time
-	if ( !inDamageEvent ) {
-		if ( damageDef->dict.GetFloat( "dot_duration" ) ) {
-			int endTime;
-			if ( damageDef->dict.GetFloat( "dot_duration" ) == -1 ) {
-				endTime = -1;
-			} else {
-				endTime = gameLocal.GetTime() + SEC2MS(damageDef->dict.GetFloat( "dot_duration" ));
-			}
-			int interval = SEC2MS(damageDef->dict.GetFloat( "dot_interval", "0" ));
-			if ( endTime == -1 || gameLocal.GetTime() + interval <= endTime ) {//post it again
-				PostEventMS( &EV_DamageOverTime, interval, endTime, interval, inflictor, attacker, dir, damageDefName, damageScale, location );
-			}
-			if ( damageDef->dict.GetString( "fx_dot", NULL ) ) {
-				ProcessEvent( &EV_DamageOverTimeEffect, endTime, interval, damageDefName );
-			}
-			if ( damageDef->dict.GetString( "snd_dot_start", NULL ) ) {
-				StartSound ( "snd_dot_start", SND_CHANNEL_ANY, 0, false, NULL );
-			}
-		}
-	}
-// RAVEN END
-
-	// do the damage
-	if ( damage > 0 ) {
-		if ( !gameLocal.isMultiplayer ) {
-			if ( g_useDynamicProtection.GetBool() && g_skill.GetInteger() < 2 ) {
-				if ( gameLocal.time > lastDmgTime + 500 && dynamicProtectionScale > 0.25f ) {
-					dynamicProtectionScale -= 0.05f;
+		// RAVEN BEGIN
+		// MCG - added damage over time
+		if (!inDamageEvent) {
+			if (damageDef->dict.GetFloat("dot_duration")) {
+				int endTime;
+				if (damageDef->dict.GetFloat("dot_duration") == -1) {
+					endTime = -1;
 				}
-			}
-
-			if ( dynamicProtectionScale > 0.0f ) {
-				damage *= dynamicProtectionScale;
-			}
-		}
-
-		if ( damage < 1 ) {
-			damage = 1;
-		}
-
-		int oldHealth = health;
-		health -= damage;
-
-		GAMELOG_ADD ( va("player%d_damage_taken", entityNumber ), damage );
-		GAMELOG_ADD ( va("player%d_damage_%s", entityNumber, damageDefName), damage );
-
-		// Check undying mode
-		if ( !damageDef->dict.GetBool( "noGod" ) ) {
-			if ( undying ) {
-				if ( health < 1 ) {
-					health = 1;
+				else {
+					endTime = gameLocal.GetTime() + SEC2MS(damageDef->dict.GetFloat("dot_duration"));
+				}
+				int interval = SEC2MS(damageDef->dict.GetFloat("dot_interval", "0"));
+				if (endTime == -1 || gameLocal.GetTime() + interval <= endTime) {//post it again
+					PostEventMS(&EV_DamageOverTime, interval, endTime, interval, inflictor, attacker, dir, damageDefName, damageScale, location);
+				}
+				if (damageDef->dict.GetString("fx_dot", NULL)) {
+					ProcessEvent(&EV_DamageOverTimeEffect, endTime, interval, damageDefName);
+				}
+				if (damageDef->dict.GetString("snd_dot_start", NULL)) {
+					StartSound("snd_dot_start", SND_CHANNEL_ANY, 0, false, NULL);
 				}
 			}
 		}
+		// RAVEN END
 
-		if ( health <= 0 ) {
+			// do the damage
+		if (damage > 0) {
+			if (!gameLocal.isMultiplayer) {
+				if (g_useDynamicProtection.GetBool() && g_skill.GetInteger() < 2) {
+					if (gameLocal.time > lastDmgTime + 500 && dynamicProtectionScale > 0.25f) {
+						dynamicProtectionScale -= 0.05f;
+					}
+				}
 
-			if ( health < -999 ) {
-				health = -999;
+				if (dynamicProtectionScale > 0.0f) {
+					damage *= dynamicProtectionScale;
+				}
 			}
 
- 			isTelefragged = damageDef->dict.GetBool( "telefrag" );
- 
- 			lastDmgTime = gameLocal.time;
+			if (damage < 1) {
+				damage = 1;
+			}
 
-			Killed( inflictor, attacker, damage, dir, location );
+			int oldHealth = health;
+			health -= damage;
 
-			if ( oldHealth > 0 ) {	
-				float pushScale = 1.0f;
-				if ( inflictor && inflictor->IsType ( idPlayer::Type ) ) {
-					pushScale = static_cast<idPlayer*>(inflictor)->PowerUpModifier ( PMOD_PROJECTILE_DEATHPUSH );
+			GAMELOG_ADD(va("player%d_damage_taken", entityNumber), damage);
+			GAMELOG_ADD(va("player%d_damage_%s", entityNumber, damageDefName), damage);
+
+			// Check undying mode
+			if (!damageDef->dict.GetBool("noGod")) {
+				if (undying) {
+					if (health < 1) {
+						health = 1;
+					}
 				}
-				InitDeathPush ( dir, location, &damageDef->dict, pushScale );
-			}			
-		} else {
-			// force a blink
-			blink_time = 0;
+			}
 
-			// let the anim script know we took damage
- 			pfl.pain = Pain( inflictor, attacker, damage, dir, location );
-			if ( !g_testDeath.GetBool() ) {
+			if (health <= 0) {
+
+				if (health < -999) {
+					health = -999;
+				}
+
+				isTelefragged = damageDef->dict.GetBool("telefrag");
+
 				lastDmgTime = gameLocal.time;
+
+				Killed(inflictor, attacker, damage, dir, location);
+
+				if (oldHealth > 0) {
+					float pushScale = 1.0f;
+					if (inflictor && inflictor->IsType(idPlayer::Type)) {
+						pushScale = static_cast<idPlayer*>(inflictor)->PowerUpModifier(PMOD_PROJECTILE_DEATHPUSH);
+					}
+					InitDeathPush(dir, location, &damageDef->dict, pushScale);
+				}
+			}
+			else {
+				// force a blink
+				blink_time = 0;
+
+				// let the anim script know we took damage
+				pfl.pain = Pain(inflictor, attacker, damage, dir, location);
+				if (!g_testDeath.GetBool()) {
+					lastDmgTime = gameLocal.time;
+				}
 			}
 		}
-	} else {
- 		// don't accumulate impulses
-		if ( af.IsLoaded() ) {
-			// clear impacts
-			af.Rest();
+		else {
+			// don't accumulate impulses
+			if (af.IsLoaded()) {
+				// clear impacts
+				af.Rest();
 
-			// physics is turned off by calling af.Rest()
-			BecomeActive( TH_PHYSICS );
+				// physics is turned off by calling af.Rest()
+				BecomeActive(TH_PHYSICS);
+			}
 		}
-	}
 
-	lastDamageDir = dir;
-  	lastDamageDir.Normalize();
-	lastDamageDef = damageDef->Index();
-	lastDamageLocation = location;
-	lastAttacker = inflictor;
+		lastDamageDir = dir;
+		lastDamageDir.Normalize();
+		lastDamageDef = damageDef->Index();
+		lastDamageLocation = location;
+		lastAttacker = inflictor;
+	}
 }
 
 /*

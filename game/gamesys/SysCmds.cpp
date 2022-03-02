@@ -326,14 +326,30 @@ void Cmd_KillMonsters_f( const idCmdArgs &args ) {
 
 /*
 ==================
-Cmd_QLKill_f
+qlkill
 
 Kills JUST the monsters that are currently loaded, not friends, items, or spawns
 ==================
 */
-void Cmd_QLKill_f( const idCmdArgs& args ) {
+void Cmd_qlkill_f( const idCmdArgs& args ) {
 	//Eric Margadonna
+	//I want this to be its own type of kill command that actally kills the spawned enemies
+	//the the level, no just remove all entities of a given type.
+	//
+	//Get all spawned entities/movables
+	//for each entity:
+	//	Check their team
+	//	If they are on enemy team, bring their health to zero. 
+	idEntity* ent;
+	const char* entData;
+	gameLocal.Printf("Command has begun");
 
+	for (ent = gameLocal.spawnedEntities.Next(); ent != NULL; ent = ent->spawnNode.Next()) {
+		entData = ent->GetClassname();
+		gameLocal.Printf(entData);
+		//entTeam = ent->GetTeamMaster()->GetName();
+		//gameLocal.Printf(entTeam);
+	}
 }
 
 /*
@@ -3102,7 +3118,9 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "listLines",				Cmd_ListDebugLines_f,		CMD_FL_GAME|CMD_FL_CHEAT,	"lists all debug lines" );
 	cmdSystem->AddCommand( "playerModel",			Cmd_PlayerModel_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"sets the given model on the player", idCmdSystem::ArgCompletion_Decl<DECL_MODELDEF> );
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
+	cmdSystem->AddCommand("qlkill", Cmd_qlkill_f, CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
 	
+
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );
 // RAVEN BEGIN
 // bdube: not using id effect system
