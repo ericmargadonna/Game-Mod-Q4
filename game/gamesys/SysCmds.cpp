@@ -326,34 +326,6 @@ void Cmd_KillMonsters_f( const idCmdArgs &args ) {
 
 /*
 ==================
-qlkill
-
-Kills JUST the monsters that are currently loaded, not friends, items, or spawns
-==================
-*/
-void Cmd_qlkill_f( const idCmdArgs& args ) {
-	//Eric Margadonna
-	//I want this to be its own type of kill command that actally kills the spawned enemies
-	//the the level, no just remove all entities of a given type.
-	//
-	//Get all spawned entities/movables
-	//for each entity:
-	//	Check their team
-	//	If they are on enemy team, bring their health to zero. 
-	idEntity* ent;
-	const char* entData;
-	gameLocal.Printf("Command has begun");
-
-	for (ent = gameLocal.spawnedEntities.Next(); ent != NULL; ent = ent->spawnNode.Next()) {
-		entData = ent->GetClassname();
-		gameLocal.Printf(entData);
-		//entTeam = ent->GetTeamMaster()->GetName();
-		//gameLocal.Printf(entTeam);
-	}
-}
-
-/*
-==================
 Cmd_KillMovables_f
 
 Kills all the moveables in a level.
@@ -3048,6 +3020,33 @@ void Cmd_CheckSave_f( const idCmdArgs &args );
 
 void Cmd_ShuffleTeams_f( const idCmdArgs& args ) {
 	gameLocal.mpGame.ShuffleTeams();
+}
+
+
+/*
+==================
+Cmd_qlkill_f
+
+Kills JUST the monsters that are currently loaded, not friends, items, or spawns
+==================
+*/
+void Cmd_qlkill_f(const idCmdArgs& args) {
+	//Eric Margadonna
+	//Special kill command that actally kills the spawned enemies in
+	//the the level, not just remove all entities of a given type.
+
+	idActor* actor;
+
+	//Iterate through the enemy team
+	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden enemies and enemies that cant be targeted 
+		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		//For each enemy, kill and ragdoll them
+		actor->SetState("State_Killed");
+		actor->StartRagdoll();
+	}
 }
 
 #ifndef _FINAL

@@ -359,6 +359,8 @@ idActor* rvAIManager::GetEnemyTeam ( aiTeam_t team ) {
 	return NULL;		
 }
 
+
+
 /*
 ================
 rvAIManager::GetAllyTeam
