@@ -3027,14 +3027,11 @@ void Cmd_ShuffleTeams_f( const idCmdArgs& args ) {
 ==================
 Cmd_qlkill_f
 
-Kills JUST the monsters that are currently loaded, not friends, items, or spawns
+Special kill command that actally kills the spawned enemies in 
+the the level, not just remove all entities of a given type.
 ==================
 */
 void Cmd_qlkill_f(const idCmdArgs& args) {
-	//Eric Margadonna
-	//Special kill command that actally kills the spawned enemies in
-	//the the level, not just remove all entities of a given type.
-
 	idActor* actor;
 
 	//Iterate through the enemy team
