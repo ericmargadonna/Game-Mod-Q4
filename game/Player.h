@@ -341,7 +341,8 @@ public:
  	idUserInterface *		hud;				// Common hud
 	idUserInterface *		mphud;				// hud overlay containing MP elements
 	
-	idUserInterface *		cardbattleHud;		//Eric Margadonna - QL Hud
+	idUserInterface *		cardbattleui;		//Eric Margadonna - QL / QuakeLanes UIs
+
 
 	idUserInterface *		objectiveSystem;
 	idUserInterface *		cinematicHud;

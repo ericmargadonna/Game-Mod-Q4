@@ -1853,7 +1853,7 @@ void idPlayer::Spawn( void ) {
 		objectiveSystem = NULL;
 
 		//Eric Margadonna - QL Hud
-		cardbattleHud = NULL;
+		cardbattleui = NULL;
 
 		if ( spawnArgs.GetString( "hud", "", temp ) ) {
 			hud = uiManager->FindGui( temp, true, false, true );
@@ -1871,7 +1871,7 @@ void idPlayer::Spawn( void ) {
 
 		//Eric Margadonna - Load QL hud
 		if (spawnArgs.GetString("cardbattlehud", "", temp)) {
-			cardbattleHud = uiManager->FindGui( temp, true, false, true );
+			cardbattleui = uiManager->FindGui( temp, true, false, true );
 		} else {
 			gameLocal.Warning("Card Battle UI not found");
 		}
