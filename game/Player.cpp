@@ -9967,6 +9967,12 @@ void idPlayer::Killed( idEntity *inflictor, idEntity *attacker, int damage, cons
 	aiManager.RemoveTeammate( this );
 	
 	isChatting = false;
+
+	carddata.cardid1 = 0;
+	carddata.cardid2 = 0;
+	carddata.cardid3 = 0;
+	carddata.cardid4 = 0;
+	carddata.cardid5 = 0;
 }
 
 /*

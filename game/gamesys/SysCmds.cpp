@@ -3034,7 +3034,7 @@ returns true if player won, false if player lost
 bool playerFirst - true if player has first move, false if enemy moves first
 ==================
 */
-bool RunQL( bool playerFirst, idList<idActor*> playerTeam ) {
+void RunQL( bool playerFirst ) {
 	idActor* actor;
 
 	//Iterate through the enemy team
@@ -3117,7 +3117,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "listLines",				Cmd_ListDebugLines_f,		CMD_FL_GAME|CMD_FL_CHEAT,	"lists all debug lines" );
 	cmdSystem->AddCommand( "playerModel",			Cmd_PlayerModel_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"sets the given model on the player", idCmdSystem::ArgCompletion_Decl<DECL_MODELDEF> );
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
-	cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
+	//cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
 	
 
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );

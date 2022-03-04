@@ -8,6 +8,6 @@ void KillEntities( const idCmdArgs &args, const idTypeInfo &superClass );
 
 void GiveStuffToPlayer( idPlayer* player, const char* name, const char* value );
 
-bool RunQL( bool playerFirst );
+void RunQL( bool playerFirst );
 
 #endif /* !__SYS_CMDS_H__ */
