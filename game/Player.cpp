@@ -20,6 +20,8 @@
 #include "Healing_Station.h"
 #include "ai/AI_Medic.h"
 
+#include "gamesys/SysCmds.h"
+
 // RAVEN BEGIN
 // nrausch: support for turning the weapon change ui on and off
 #ifdef _XENON
@@ -1120,8 +1122,8 @@ idPlayer::idPlayer() {
 	overlayHud				= NULL;
 	overlayHudTime			= 0;
 
-	//Eric Margadonna - QL Hud
-	cardbattleHud			= NULL;
+	//Eric Margadonna - QL / QuakeLanes
+	cardbattleui			= NULL;
 
 	lastDmgTime				= 0;
 	deathClearContentsTime	= 0;
@@ -1818,6 +1820,8 @@ void idPlayer::Spawn( void ) {
 	if ( entityNumber >= MAX_CLIENTS ) {
 		gameLocal.Error( "entityNum > MAX_CLIENTS for player.  Player may only be spawned with a client." );
 	}
+
+	
 
 	// allow thinking during cinematics
 	cinematic = true;

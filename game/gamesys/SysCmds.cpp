@@ -3025,13 +3025,16 @@ void Cmd_ShuffleTeams_f( const idCmdArgs& args ) {
 
 /*
 ==================
-Cmd_qlkill_f
+RunQL
 
-Special kill command that actally kills the spawned enemies in 
-the the level, not just remove all entities of a given type.
+Command to initiate QuakeLanes game
+
+returns true if player won, false if player lost
+
+bool playerFirst - true if player has first move, false if enemy moves first
 ==================
 */
-void Cmd_qlkill_f(const idCmdArgs& args) {
+bool RunQL( bool playerFirst, idList<idActor*> playerTeam ) {
 	idActor* actor;
 
 	//Iterate through the enemy team
@@ -3114,7 +3117,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "listLines",				Cmd_ListDebugLines_f,		CMD_FL_GAME|CMD_FL_CHEAT,	"lists all debug lines" );
 	cmdSystem->AddCommand( "playerModel",			Cmd_PlayerModel_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"sets the given model on the player", idCmdSystem::ArgCompletion_Decl<DECL_MODELDEF> );
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
-	cmdSystem->AddCommand("qlkill", Cmd_qlkill_f, CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
+	cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
 	
 
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );
