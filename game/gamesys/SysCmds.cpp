@@ -3051,7 +3051,6 @@ void RunQL( bool playerFirst ) {
 
 
 void QLHelp( const idCmdArgs& args ) {
-
 	//TODO FIX ME
 	gameLocal.Printf("Its doin somethin");
 	idPlayer* player = gameLocal.GetLocalPlayer();
