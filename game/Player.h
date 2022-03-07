@@ -328,14 +328,6 @@ public:
 		bool		objectiveFailed	:1;
 		bool		noFallingDamage :1;
 	} pfl;
-
-	struct cardData_s {
-		int			cardid1;
-		int			cardid2;
-		int			cardid3;
-		int			cardid4;
-		int			cardid5;
-	} carddata;
 		
 	// inventory
 	idInventory				inventory;
@@ -350,6 +342,7 @@ public:
 	idUserInterface *		mphud;				// hud overlay containing MP elements
 	
 	idUserInterface *		cardbattleui;		//Eric Margadonna - QL / QuakeLanes UIs
+	idUserInterface *		qlhelpmenu;
 
 
 	idUserInterface *		objectiveSystem;

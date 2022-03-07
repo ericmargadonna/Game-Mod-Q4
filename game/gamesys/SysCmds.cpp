@@ -3039,7 +3039,7 @@ void RunQL( bool playerFirst ) {
 
 	//Iterate through the enemy team
 	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
-		//Skip hidden enemies and enemies that cant be targeted 
+		//Skip hidden enemies and enemies that cannot be targeted 
 		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
 			continue;
 		}
@@ -3048,6 +3048,17 @@ void RunQL( bool playerFirst ) {
 		actor->StartRagdoll();
 	}
 }
+
+
+void QLHelp( const idCmdArgs& args ) {
+
+	//TODO FIX ME
+	gameLocal.Printf("Its doin somethin");
+	idPlayer* player = gameLocal.GetLocalPlayer();
+	player->qlhelpmenu->Activate(true, gameLocal.time);
+	player->qlhelpmenu->HandleNamedEvent("showHelp");
+}
+
 
 #ifndef _FINAL
 void Cmd_ClientOverflowReliable_f( const idCmdArgs& args ) {
@@ -3118,6 +3129,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "playerModel",			Cmd_PlayerModel_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"sets the given model on the player", idCmdSystem::ArgCompletion_Decl<DECL_MODELDEF> );
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
 	//cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
+	cmdSystem->AddCommand( "qlhelp",				QLHelp,						CMD_FL_GAME|CMD_FL_CHEAT,	"Show QuakeLanes help menu");
 	
 
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );

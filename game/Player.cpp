@@ -1124,6 +1124,7 @@ idPlayer::idPlayer() {
 
 	//Eric Margadonna - QL / QuakeLanes
 	cardbattleui			= NULL;
+	qlhelpmenu				= NULL;
 
 	lastDmgTime				= 0;
 	deathClearContentsTime	= 0;
@@ -1858,6 +1859,7 @@ void idPlayer::Spawn( void ) {
 
 		//Eric Margadonna - QL Hud
 		cardbattleui = NULL;
+		qlhelpmenu = NULL;
 
 		if ( spawnArgs.GetString( "hud", "", temp ) ) {
 			hud = uiManager->FindGui( temp, true, false, true );
@@ -1871,13 +1873,6 @@ void idPlayer::Spawn( void ) {
 			} else {
 				gameLocal.Warning( "idPlayer::Spawn() - No MP hud overlay while in MP.");
 			}
-		}
-
-		//Eric Margadonna - Load QL hud
-		if (spawnArgs.GetString("cardbattlehud", "", temp)) {
-			cardbattleui = uiManager->FindGui( temp, true, false, true );
-		} else {
-			gameLocal.Warning("Card Battle UI not found");
 		}
 
 		if ( hud ) {
@@ -1903,6 +1898,8 @@ void idPlayer::Spawn( void ) {
 		if ( !gameLocal.isMultiplayer ) {
 			objectiveSystem = uiManager->FindGui( spawnArgs.GetString( "wristcomm", "guis/wristcomm.gui" ), true, false, true );
 			objectiveSystemOpen = false;
+
+			qlhelpmenu = uiManager->FindGui(spawnArgs.GetString("helpmenu", "guis/helpmenu.gui"), true, false, true);
 #ifdef _XENON
 			g_ObjectiveSystemOpen = objectiveSystemOpen;
 #endif
@@ -9967,12 +9964,6 @@ void idPlayer::Killed( idEntity *inflictor, idEntity *attacker, int damage, cons
 	aiManager.RemoveTeammate( this );
 	
 	isChatting = false;
-
-	carddata.cardid1 = 0;
-	carddata.cardid2 = 0;
-	carddata.cardid3 = 0;
-	carddata.cardid4 = 0;
-	carddata.cardid5 = 0;
 }
 
 /*
