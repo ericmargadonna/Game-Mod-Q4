@@ -140,6 +140,7 @@ idAI::idAI ( void ) {
 	actionSkipTime	= 0;
 	actionTime		= 0;
 
+	hascard = false;
 	carddead = false;
 	canthink = true;
 }
@@ -1525,6 +1526,11 @@ idAI::AdjustHealthByDamage
 =====================
 */
 void idAI::AdjustHealthByDamage	( int damage ) {
+
+	//Quakelanes - Eric Margadonna
+	//Dirty way to not let enemy health change
+	return;
+
 	if ( aifl.undying ) {
 		return;
 	}	
@@ -1562,6 +1568,14 @@ bool idAI::Pain( idEntity *inflictor, idEntity *attacker, int damage, const idVe
 
 	// ignore damage from self
 	if ( attacker != this ) {
+		//QuakeLanes - Eric Margadonna
+		//Whenever anything gets damaged, we check if it's an AI Strogg as
+		//well as whether or not the player was the attacker
+		//If this checks out we start our card game
+		if (team == AITEAM_STROGG && attacker->IsType(idPlayer::GetClassType())) {
+			gameLocal.GetLocalPlayer()->runQLBattle( true );
+		}
+
 		// React to taking pain
 		ReactToPain ( attacker, damage );
 

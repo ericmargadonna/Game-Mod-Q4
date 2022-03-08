@@ -803,8 +803,9 @@ public:
 //----------------------------//
 	bool					helpmenuopen;
 	bool					incardbattle;
-	bool					playermovesfirst;
 	float					livesleft;
+
+	idList<idActor*>		currentenemylist;
 
 	void					toggleQLHelp( void );
 	void					runQLBattle( bool playerMovesFirst );

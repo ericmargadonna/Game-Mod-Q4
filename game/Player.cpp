@@ -9300,6 +9300,8 @@ void idPlayer::Think( void ) {
 	//----------------------------//
 	//QuakeLanes - Eric Margadonna//
 	//----------------------------//
+
+	//Make sure the player health always reflects number of lives left
 	this->Event_SetHealth(livesleft);
 	if (incardbattle) {
 		//The runQLBattle handles the gui and the playermovesfirst bool
@@ -9314,9 +9316,15 @@ void idPlayer::Think( void ) {
 			{
 				endQLBattle();
 			}
+			if (usercmd.forwardmove > 0) {
+				hud->SetStateString("currentmover", "Your Turn");
+			}
 			if (usercmd.rightmove < 0)
 			{
-				endQLBattle();
+				hud->SetStateString("currentmover", "Enemy Turn");
+			}
+			if (usercmd.upmove > 1) {
+			
 			}
 		}
 		return;
@@ -14161,7 +14169,12 @@ void idPlayer::toggleQLHelp( void ) {
 }
 
 void idPlayer::runQLBattle( bool playerMovesFirst ) {
-	playermovesfirst = playerMovesFirst;
+	if (playerMovesFirst) {
+		hud->SetStateString("currentMover", "Your Turn");
+	}
+	else {
+		hud->SetStateString("currentMover", "Enemy Turn");
+	}
 	hud->HandleNamedEvent("showQLBattle");
 	incardbattle = true;
 }
@@ -14204,8 +14217,12 @@ void idPlayer::killEnemies( void ) {
 		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
 			continue;
 		}
+
+		//Let them think about what they've done before they die
 		static_cast<idAI*>(actor)->canthink = true;
-		//For each enemy, kill and ragdoll them
+
+		//For each enemy, kill and ragdoll them 
+		//only if they have been in a QLBattle and died
 		if (static_cast<idAI*>(actor)->carddead) {
 			actor->SetState("State_Killed");
 			actor->StartRagdoll();
@@ -14222,7 +14239,7 @@ void idPlayer::enableTeam(void) {
 		if (actor->fl.notarget || actor->fl.isDormant || actor == this || (actor->IsHidden() && !actor->IsInVehicle())) {
 			continue;
 		}
-		//For each of them, turn their thinking off
+		//Give them thier IQ back
 		static_cast<idAI*>(actor)->canthink = true;
 	}
 }

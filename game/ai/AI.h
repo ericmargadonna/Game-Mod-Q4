@@ -790,9 +790,10 @@ public:
 	const char *			ChooseAnim						( int channel, const char *animname );
 
 	//Quakelanes variables
-	bool					canthink;
+	bool					hascard;
 	bool					carddead;
-
+	bool					canthink;
+	
 	//
 	// ai/ai_events.cpp
 	//
