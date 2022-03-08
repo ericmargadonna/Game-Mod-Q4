@@ -1122,10 +1122,6 @@ idPlayer::idPlayer() {
 	overlayHud				= NULL;
 	overlayHudTime			= 0;
 
-	//Eric Margadonna - QL / QuakeLanes
-	cardbattleui			= NULL;
-	qlhelpmenu				= NULL;
-
 	lastDmgTime				= 0;
 	deathClearContentsTime	= 0;
 	nextHealthPulse			= 0;
@@ -1857,10 +1853,6 @@ void idPlayer::Spawn( void ) {
 		
 		objectiveSystem = NULL;
 
-		//Eric Margadonna - QL Hud
-		cardbattleui = NULL;
-		qlhelpmenu = NULL;
-
 		if ( spawnArgs.GetString( "hud", "", temp ) ) {
 			hud = uiManager->FindGui( temp, true, false, true );
 		} else {
@@ -1898,11 +1890,14 @@ void idPlayer::Spawn( void ) {
 		if ( !gameLocal.isMultiplayer ) {
 			objectiveSystem = uiManager->FindGui( spawnArgs.GetString( "wristcomm", "guis/wristcomm.gui" ), true, false, true );
 			objectiveSystemOpen = false;
-
-			qlhelpmenu = uiManager->FindGui(spawnArgs.GetString("helpmenu", "guis/helpmenu.gui"), true, false, true);
 #ifdef _XENON
 			g_ObjectiveSystemOpen = objectiveSystemOpen;
 #endif
+
+			//Eric Margadonna - Also set up my Quakelanes stuff
+			helpmenuopen = false;
+			incardbattle = false;
+			livesleft = 4;
 		}
 
 		// clear votes
@@ -9301,6 +9296,31 @@ Called every tic for each player
 */
 void idPlayer::Think( void ) {
 	renderEntity_t *headRenderEnt;
+
+	//----------------------------//
+	//QuakeLanes - Eric Margadonna//
+	//----------------------------//
+	this->Event_SetHealth(livesleft);
+	if (incardbattle) {
+		//The runQLBattle handles the gui and the playermovesfirst bool
+		//so at this point the battle gui is open
+		disablenpcs();
+		if (gameLocal.usercmds) {
+			//grab the user input
+			usercmd = gameLocal.usercmds[entityNumber];
+			buttonMask &= usercmd.buttons;
+			usercmd.buttons &= ~buttonMask;
+			if (usercmd.rightmove > 0)
+			{
+				endQLBattle();
+			}
+			if (usercmd.rightmove < 0)
+			{
+				endQLBattle();
+			}
+		}
+		return;
+	}
  
 	if ( talkingNPC ) {
 		if ( !talkingNPC.IsValid() ) {
@@ -10283,8 +10303,17 @@ void idPlayer::Damage(idEntity* inflictor, idEntity* attacker, const idVec3& dir
 				}
 			}
 
-			if (damage < 1) {
-				damage = 1;
+			//OG Quake code
+			//if (damage < 1){
+			//	damage = 1;
+			//}
+
+			//QuakeLanes - Eric Margadonna
+			//Damage prevention, we use lives here!
+			//I still want everything to be calculated though 
+			//because I use the last attacker variable
+			if (damage) {
+				damage = 0;
 			}
 
 			int oldHealth = health;
@@ -10349,6 +10378,16 @@ void idPlayer::Damage(idEntity* inflictor, idEntity* attacker, const idVec3& dir
 		lastDamageDef = damageDef->Index();
 		lastDamageLocation = location;
 		lastAttacker = inflictor;
+		
+		//Quakelanes - Eric Margadonna
+		//Let all of the calculations run anyway just to make sure nothing breaks
+		//then we can run our stuff
+		if (attacker->IsType(idActor::GetClassType()) && static_cast<idActor*>(attacker)->team != team) {
+			if (attacker == this) {
+				return;
+			}
+			runQLBattle(false);
+		}
 	}
 }
 
@@ -14106,3 +14145,84 @@ int idPlayer::CanSelectWeapon(const char* weaponName)
 }
 
 // RITUAL END
+
+//----------------------------//
+//Quakelanes - Eric Margadonna//
+//----------------------------//
+
+void idPlayer::toggleQLHelp( void ) {
+	if (helpmenuopen) {
+		hud->HandleNamedEvent("showQLHelp");
+	}
+	else{
+		hud->HandleNamedEvent("hideQLHelp");
+	}
+	helpmenuopen ^= 1;
+}
+
+void idPlayer::runQLBattle( bool playerMovesFirst ) {
+	playermovesfirst = playerMovesFirst;
+	hud->HandleNamedEvent("showQLBattle");
+	incardbattle = true;
+}
+
+void idPlayer::endQLBattle( void ) {
+	hud->HandleNamedEvent("hideQLBattle");
+	incardbattle = false;
+	killEnemies();
+	enableTeam();
+}
+
+void idPlayer::disablenpcs( void ) {
+	idActor* actor;
+	//Iterate through the enemy team
+	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden enemies and enemies that cannot be targeted 
+		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		//For each enemy, turn their thinking off
+		static_cast<idAI*>(actor)->canthink = false;
+	}
+
+	//Also iterate though the player's team
+	for (actor = aiManager.GetEnemyTeam(AITEAM_STROGG); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden and untargetable friendlies 
+		if (actor->fl.notarget || actor->fl.isDormant || actor == this || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		//For each of them, turn their thinking off
+		static_cast<idAI*>(actor)->canthink = false;
+	}
+}
+
+void idPlayer::killEnemies( void ) {
+	idActor* actor;
+	//Iterate through the enemy team
+	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden enemies and enemies that cannot be targeted 
+		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		static_cast<idAI*>(actor)->canthink = true;
+		//For each enemy, kill and ragdoll them
+		if (static_cast<idAI*>(actor)->carddead) {
+			actor->SetState("State_Killed");
+			actor->StartRagdoll();
+		}
+	}
+}
+
+void idPlayer::enableTeam(void) {
+	idActor* actor;
+	//Iterate through the enemy team
+	//Also iterate though the player's team
+	for (actor = aiManager.GetEnemyTeam(AITEAM_STROGG); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden and untargetable friendlies 
+		if (actor->fl.notarget || actor->fl.isDormant || actor == this || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		//For each of them, turn their thinking off
+		static_cast<idAI*>(actor)->canthink = true;
+	}
+}

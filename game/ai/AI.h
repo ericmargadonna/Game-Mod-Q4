@@ -789,6 +789,10 @@ public:
 	void					BecomeNonSolid					( void );
 	const char *			ChooseAnim						( int channel, const char *animname );
 
+	//Quakelanes variables
+	bool					canthink;
+	bool					carddead;
+
 	//
 	// ai/ai_events.cpp
 	//

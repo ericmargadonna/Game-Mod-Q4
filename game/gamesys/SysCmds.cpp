@@ -3051,11 +3051,14 @@ void RunQL( bool playerFirst ) {
 
 
 void QLHelp( const idCmdArgs& args ) {
-	//TODO FIX ME
-	gameLocal.Printf("Its doin somethin");
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	player->qlhelpmenu->Activate(true, gameLocal.time);
-	player->qlhelpmenu->HandleNamedEvent("showHelp");
+	if (player) {
+		player->toggleQLHelp();
+	}
+}
+
+void QLTest( const idCmdArgs& args ) {
+	gameLocal.GetLocalPlayer()->runQLBattle( true );
 }
 
 
@@ -3129,6 +3132,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
 	//cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
 	cmdSystem->AddCommand( "qlhelp",				QLHelp,						CMD_FL_GAME|CMD_FL_CHEAT,	"Show QuakeLanes help menu");
+	cmdSystem->AddCommand("qltest", QLTest, CMD_FL_GAME | CMD_FL_CHEAT, "Test Quakelanes stuff");
 	
 
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );

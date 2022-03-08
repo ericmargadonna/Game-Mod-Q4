@@ -139,6 +139,9 @@ idAI::idAI ( void ) {
 	actionAnimNum	= 0;
 	actionSkipTime	= 0;
 	actionTime		= 0;
+
+	carddead = false;
+	canthink = true;
 }
 
 /*
@@ -1139,6 +1142,11 @@ void idAI::Think( void ) {
 
 	// if we are completely closed off from the player, don't do anything at all
 	if ( CheckDormant() ) {
+		return;
+	}
+
+	//Quakelanes thinking restriction
+	if (!canthink) {
 		return;
 	}
 

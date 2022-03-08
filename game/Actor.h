@@ -258,6 +258,12 @@ public:
 	int						lightningNextTime;
 	int						lightningEffects;
 
+	//--------------------//
+	//Quakelanes Variables//
+	//--------------------//
+	bool					canthink;
+	bool					carddead;
+
 protected:
 	friend class			idAnimState;
 

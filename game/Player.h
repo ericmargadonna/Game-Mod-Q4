@@ -340,10 +340,6 @@ public:
 
  	idUserInterface *		hud;				// Common hud
 	idUserInterface *		mphud;				// hud overlay containing MP elements
-	
-	idUserInterface *		cardbattleui;		//Eric Margadonna - QL / QuakeLanes UIs
-	idUserInterface *		qlhelpmenu;
-
 
 	idUserInterface *		objectiveSystem;
 	idUserInterface *		cinematicHud;
@@ -801,6 +797,21 @@ public:
 	void					SetCash( float newCashAmount );
 	void					ResetCash();
 // RITUAL END
+
+//----------------------------//
+//Quakelanes - Eric Margadonna//
+//----------------------------//
+	bool					helpmenuopen;
+	bool					incardbattle;
+	bool					playermovesfirst;
+	float					livesleft;
+
+	void					toggleQLHelp( void );
+	void					runQLBattle( bool playerMovesFirst );
+	void					disablenpcs( void );
+	void					killEnemies( void );
+	void					enableTeam( void );
+	void					endQLBattle( void );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );

@@ -468,6 +468,8 @@ idActor::idActor( void )
 
 	lightningEffects = 0;
 	lightningNextTime = 0;
+
+	
 }
 
 /*
