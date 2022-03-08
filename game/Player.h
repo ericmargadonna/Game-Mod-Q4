@@ -804,9 +804,12 @@ public:
 	bool					helpmenuopen;
 	bool					incardbattle;
 	bool					currentmover;
+	bool					gameOver;
+	bool					playerWon;
 	float					livesleft;
-	float					mindamagemod;//FUT
-	float					minhealthmod;//URE
+	int						mindamagemod;//FUT
+	int						minhealthmod;//URE
+	int						turnnumber;
 
 	idList<idActor*>		currentenemylist;
 
@@ -817,6 +820,9 @@ public:
 	void					enablenpcs( void );
 	void					endQLBattle( void );
 	void					QLAbort( void );
+	void					toggleCurrentMover( void );
+	void					checkForWinner( void );
+	void					evaluateDamage( void );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );

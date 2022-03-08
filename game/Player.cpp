@@ -9306,36 +9306,66 @@ void idPlayer::Think( void ) {
 	if (incardbattle) {
 		//The runQLBattle handles the gui and the playermovesfirst bool
 		//so at this point the battle gui is open
+
+		//have to continually disable the npcs becuase sometimes they spawn
+		//while in a battle and aren't frozen
 		disablenpcs();
+
+		//Below are two blocks, one of which will run once during every tick of a battle
+		//depending on who's turn it is
+
+		if (gameOver) {
+			if (!playerWon) {
+				livesleft -= 1;
+			}
+			endQLBattle();
+		}
+
 		if (currentmover) {
 			if (gameLocal.usercmds) {
 				//grab the user input
 				usercmd = gameLocal.usercmds[entityNumber];
 				buttonMask &= usercmd.buttons;
 				usercmd.buttons &= ~buttonMask;
+
 				if (usercmd.rightmove > 0) //D
 				{
 					endQLBattle();
 				}
 				if (usercmd.forwardmove > 0) //W
 				{
-					hud->SetStateString("currentmover", "Your Turn");
+					toggleCurrentMover();
 				}
 				if (usercmd.rightmove < 0) //S
 				{
-					hud->SetStateString("currentmover", "Enemy Turn");
+					
 				}
 				if (usercmd.upmove > 1) //Spacebar
 				{
-
+					return;
 				}
 			}
+			evaluateDamage();
+			return;
 		}
-		else {
-			
+
+		if (!currentmover) {
+			//Check for empty slots, and fill one if we can
+			for (int i = 1; i<=3 && i <= currentenemylist.Num() ; i++) {
+				if (hud->GetStateString(va("ec%d_title", i)) == "") {
+					hud->SetStateString(va("ec%d_title", i), currentenemylist[i]->GetName());
+					hud->SetStateInt(va("ec%d_health", i), 5);
+					hud->SetStateInt(va("ec%d_attack", i), 5);
+					break;
+				}
+			}
+			evaluateDamage();
+			toggleCurrentMover();
+			return;
 		}
-		return;
 	}
+
+	//END QUAKELANES
  
 	if ( talkingNPC ) {
 		if ( !talkingNPC.IsValid() ) {
@@ -14184,33 +14214,40 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 		}
 		//For each enemy, add them into the current enemies list
 		static_cast<idAI*>(actor)->hascard = true;
-		static_cast<idAI*>(actor)->carddead = false;
 		currentenemylist.Append(actor);
 	}
 
 	if (playerMovesFirst) {
 		hud->SetStateString("currentMover", "Your Turn");
+		currentmover = true;
 	}
 	else {
 		hud->SetStateString("currentMover", "Enemy Turn");
+		currentmover = false;
 	}
+	gameOver = false;
+	playerWon = false;
 	
-	//Make sure that we set the hud variables for as many enemies as we can
-	for (int i = 0; i < 3 && i+1 <= currentenemylist.Num(); i++) {
-		hud->SetStateString( va("ec%d_title", i), currentenemylist[i]->GetName());
-		hud->SetStateFloat(va("ec%d_health", i), 5);
-		hud->SetStateFloat(va("ec%d_attack", i), 5);
-	}
 	hud->HandleNamedEvent("showQLBattle");
 	incardbattle = true;
 }
 
 void idPlayer::endQLBattle( void ) {
 	hud->HandleNamedEvent("hideQLBattle");
-	currentenemylist.Clear();
-	incardbattle = false;
 	killEnemies();
 	enablenpcs();
+	currentenemylist.Clear();
+
+	for (int i = 1; i <= 3; i++) {
+		hud->SetStateString(va("pc%d_title", i), "");
+		hud->SetStateFloat(va("pc%d_health", i), 0);
+		hud->SetStateFloat(va("pc%d_attack", i), 0);
+		hud->SetStateString(va("ec%d_title", i), "");
+		hud->SetStateFloat(va("ec%d_health", i), 0);
+		hud->SetStateFloat(va("ec%d_attack", i), 0);
+	}
+	
+	incardbattle = false;
 }
 
 void idPlayer::QLAbort( void ) {
@@ -14256,11 +14293,8 @@ void idPlayer::killEnemies( void ) {
 		static_cast<idAI*>(actor)->canthink = true;
 
 		//For each enemy, kill and ragdoll them 
-		//only if they have been in a QLBattle and died
-		if (static_cast<idAI*>(actor)->carddead) {
-			actor->SetState("State_Killed");
-			actor->StartRagdoll();
-		}
+		actor->SetState("State_Killed");
+		actor->StartRagdoll();
 	}
 }
 
@@ -14288,3 +14322,23 @@ void idPlayer::enablenpcs( void ) {
 	}
 	
 }
+
+void idPlayer::toggleCurrentMover( void ) {
+	currentmover ^= 1;
+	if (currentmover) {
+		hud->SetStateString("currentMover", "Your Turn");
+	}
+	else {
+		hud->SetStateString("currentMover", "Enemy Turn");
+	}
+}
+
+void idPlayer::checkForWinner( void ) {
+	return;
+}
+
+void idPlayer::evaluateDamage( void ) {
+	return;
+}
+
+//END QUAKELANES
