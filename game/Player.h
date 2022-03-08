@@ -803,7 +803,10 @@ public:
 //----------------------------//
 	bool					helpmenuopen;
 	bool					incardbattle;
+	bool					currentmover;
 	float					livesleft;
+	float					mindamagemod;//FUT
+	float					minhealthmod;//URE
 
 	idList<idActor*>		currentenemylist;
 
@@ -811,8 +814,9 @@ public:
 	void					runQLBattle( bool playerMovesFirst );
 	void					disablenpcs( void );
 	void					killEnemies( void );
-	void					enableTeam( void );
+	void					enablenpcs( void );
 	void					endQLBattle( void );
+	void					QLAbort( void );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );

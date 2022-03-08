@@ -9307,25 +9307,32 @@ void idPlayer::Think( void ) {
 		//The runQLBattle handles the gui and the playermovesfirst bool
 		//so at this point the battle gui is open
 		disablenpcs();
-		if (gameLocal.usercmds) {
-			//grab the user input
-			usercmd = gameLocal.usercmds[entityNumber];
-			buttonMask &= usercmd.buttons;
-			usercmd.buttons &= ~buttonMask;
-			if (usercmd.rightmove > 0)
-			{
-				endQLBattle();
+		if (currentmover) {
+			if (gameLocal.usercmds) {
+				//grab the user input
+				usercmd = gameLocal.usercmds[entityNumber];
+				buttonMask &= usercmd.buttons;
+				usercmd.buttons &= ~buttonMask;
+				if (usercmd.rightmove > 0) //D
+				{
+					endQLBattle();
+				}
+				if (usercmd.forwardmove > 0) //W
+				{
+					hud->SetStateString("currentmover", "Your Turn");
+				}
+				if (usercmd.rightmove < 0) //S
+				{
+					hud->SetStateString("currentmover", "Enemy Turn");
+				}
+				if (usercmd.upmove > 1) //Spacebar
+				{
+
+				}
 			}
-			if (usercmd.forwardmove > 0) {
-				hud->SetStateString("currentmover", "Your Turn");
-			}
-			if (usercmd.rightmove < 0)
-			{
-				hud->SetStateString("currentmover", "Enemy Turn");
-			}
-			if (usercmd.upmove > 1) {
+		}
+		else {
 			
-			}
 		}
 		return;
 	}
@@ -14169,11 +14176,30 @@ void idPlayer::toggleQLHelp( void ) {
 }
 
 void idPlayer::runQLBattle( bool playerMovesFirst ) {
+	idActor* actor;
+	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden enemies and enemies that cannot be targeted 
+		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		//For each enemy, add them into the current enemies list
+		static_cast<idAI*>(actor)->hascard = true;
+		static_cast<idAI*>(actor)->carddead = false;
+		currentenemylist.Append(actor);
+	}
+
 	if (playerMovesFirst) {
 		hud->SetStateString("currentMover", "Your Turn");
 	}
 	else {
 		hud->SetStateString("currentMover", "Enemy Turn");
+	}
+	
+	//Make sure that we set the hud variables for as many enemies as we can
+	for (int i = 0; i < 3 && i+1 <= currentenemylist.Num(); i++) {
+		hud->SetStateString( va("ec%d_title", i), currentenemylist[i]->GetName());
+		hud->SetStateFloat(va("ec%d_health", i), 5);
+		hud->SetStateFloat(va("ec%d_attack", i), 5);
 	}
 	hud->HandleNamedEvent("showQLBattle");
 	incardbattle = true;
@@ -14181,9 +14207,17 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 
 void idPlayer::endQLBattle( void ) {
 	hud->HandleNamedEvent("hideQLBattle");
+	currentenemylist.Clear();
 	incardbattle = false;
 	killEnemies();
-	enableTeam();
+	enablenpcs();
+}
+
+void idPlayer::QLAbort( void ) {
+	hud->HandleNamedEvent("hideQLBattle");
+	currentenemylist.Clear();
+	incardbattle = false;
+	enablenpcs();
 }
 
 void idPlayer::disablenpcs( void ) {
@@ -14230,7 +14264,7 @@ void idPlayer::killEnemies( void ) {
 	}
 }
 
-void idPlayer::enableTeam(void) {
+void idPlayer::enablenpcs( void ) {
 	idActor* actor;
 	//Iterate through the enemy team
 	//Also iterate though the player's team
@@ -14242,4 +14276,15 @@ void idPlayer::enableTeam(void) {
 		//Give them thier IQ back
 		static_cast<idAI*>(actor)->canthink = true;
 	}
+
+	//Go through enemies here just to make sure no actors are frozen in time by mistake
+	//Kill enemies will be run before this after a game and won't run at all on an abort
+	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
+		//Skip hidden enemies and enemies that cannot be targeted 
+		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
+			continue;
+		}
+		static_cast<idAI*>(actor)->canthink = true;
+	}
+	
 }

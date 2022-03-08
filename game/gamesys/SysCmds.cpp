@@ -3021,34 +3021,7 @@ void Cmd_CheckSave_f( const idCmdArgs &args );
 void Cmd_ShuffleTeams_f( const idCmdArgs& args ) {
 	gameLocal.mpGame.ShuffleTeams();
 }
-
-
-/*
-==================
-RunQL
-
-Command to initiate QuakeLanes game
-
-returns true if player won, false if player lost
-
-bool playerFirst - true if player has first move, false if enemy moves first
-==================
-*/
-void RunQL( bool playerFirst ) {
-	idActor* actor;
-
-	//Iterate through the enemy team
-	for (actor = aiManager.GetEnemyTeam(AITEAM_MARINE); actor; actor = actor->teamNode.Next()) {
-		//Skip hidden enemies and enemies that cannot be targeted 
-		if (actor->fl.notarget || actor->fl.isDormant || (actor->IsHidden() && !actor->IsInVehicle())) {
-			continue;
-		}
-		//For each enemy, kill and ragdoll them
-		actor->SetState("State_Killed");
-		actor->StartRagdoll();
-	}
-}
-
+//QuakeLanes - Eric Margadonna
 
 void QLHelp( const idCmdArgs& args ) {
 	idPlayer* player = gameLocal.GetLocalPlayer();
@@ -3057,8 +3030,8 @@ void QLHelp( const idCmdArgs& args ) {
 	}
 }
 
-void QLTest( const idCmdArgs& args ) {
-	gameLocal.GetLocalPlayer()->runQLBattle( true );
+void QLAbort( const idCmdArgs& args ) {
+	gameLocal.GetLocalPlayer()->QLAbort();
 }
 
 
@@ -3132,7 +3105,7 @@ void idGameLocal::InitConsoleCommands( void ) {
 	cmdSystem->AddCommand( "flashlight",			Cmd_Flashlight_f,			CMD_FL_GAME|CMD_FL_CHEAT,	"toggle actor's flashlight", idGameLocal::ArgCompletion_AIName );
 	//cmdSystem->AddCommand(	"qlkill",				RunQL,						CMD_FL_GAME | CMD_FL_CHEAT, "QuakeLanes Command - Kill all spawned enemies");
 	cmdSystem->AddCommand( "qlhelp",				QLHelp,						CMD_FL_GAME|CMD_FL_CHEAT,	"Show QuakeLanes help menu");
-	cmdSystem->AddCommand("qltest", QLTest, CMD_FL_GAME | CMD_FL_CHEAT, "Test Quakelanes stuff");
+	cmdSystem->AddCommand("qlabort", QLAbort, CMD_FL_GAME | CMD_FL_CHEAT, "Abort a quakelanes session without killing anything");
 	
 
 	cmdSystem->AddCommand( "shuffleTeams",			Cmd_ShuffleTeams_f,			CMD_FL_GAME,				"shuffle teams" );
