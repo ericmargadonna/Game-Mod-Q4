@@ -810,8 +810,11 @@ public:
 	int						mindamagemod;//FUT
 	int						minhealthmod;//URE
 	int						turnnumber;
+	//int						nextTurnTime;
 
 	idList<idActor*>		currentenemylist;
+	//idList<bool>			enemiesAlive;
+	//Probably don't need this
 
 	void					toggleQLHelp( void );
 	void					runQLBattle( bool playerMovesFirst );
@@ -820,9 +823,10 @@ public:
 	void					enablenpcs( void );
 	void					endQLBattle( void );
 	void					QLAbort( void );
-	void					toggleCurrentMover( void );
-	void					checkForWinner( void );
-	void					evaluateDamage( void );
+	//void					toggleCurrentMover( void );
+	//void					checkForWinner( void );
+	//void					evaluateDamage( void );
+	//void					setNextTurnTime( void );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );

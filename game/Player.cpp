@@ -9300,27 +9300,33 @@ void idPlayer::Think( void ) {
 	//----------------------------//
 	//QuakeLanes - Eric Margadonna//
 	//----------------------------//
-
+	/*
 	//Make sure the player health always reflects number of lives left
 	this->Event_SetHealth(livesleft);
+
+	//This is the meat n' potatos right here
 	if (incardbattle) {
 		//The runQLBattle handles the gui and the playermovesfirst bool
 		//so at this point the battle gui is open
 
+		//Adding to delay between turns to see if this stops the crashing
+		if (gameLocal.time < nextTurnTime) {
+			return;
+		}
 		//have to continually disable the npcs becuase sometimes they spawn
 		//while in a battle and aren't frozen
 		disablenpcs();
 
-		//Below are two blocks, one of which will run once during every tick of a battle
-		//depending on who's turn it is
-
+		//Check for gameover condition
 		if (gameOver) {
 			if (!playerWon) {
+				//lose a life if you lose
 				livesleft -= 1;
 			}
 			endQLBattle();
 		}
 
+		//Player's Turn
 		if (currentmover) {
 			if (gameLocal.usercmds) {
 				//grab the user input
@@ -9330,41 +9336,48 @@ void idPlayer::Think( void ) {
 
 				if (usercmd.rightmove > 0) //D
 				{
-					endQLBattle();
+					gameOver = true;
+					playerWon = true;
 				}
 				if (usercmd.forwardmove > 0) //W
 				{
 					toggleCurrentMover();
 				}
+				/*
 				if (usercmd.rightmove < 0) //S
 				{
 					
 				}
 				if (usercmd.upmove > 1) //Spacebar
 				{
-					return;
+					
 				}
 			}
+			setNextTurnTime();
 			evaluateDamage();
 			return;
 		}
 
+		//Enemy's Turn
 		if (!currentmover) {
 			//Check for empty slots, and fill one if we can
+			float isAlive;
 			for (int i = 1; i<=3 && i <= currentenemylist.Num() ; i++) {
-				if (hud->GetStateString(va("ec%d_title", i)) == "") {
+				isAlive = hud->GetStateFloat(va("ec%d_alive", i));
+				if (isAlive == 0) {
 					hud->SetStateString(va("ec%d_title", i), currentenemylist[i]->GetName());
 					hud->SetStateInt(va("ec%d_health", i), 5);
 					hud->SetStateInt(va("ec%d_attack", i), 5);
 					break;
 				}
 			}
+			setNextTurnTime();
 			evaluateDamage();
 			toggleCurrentMover();
 			return;
 		}
 	}
-
+	*/
 	//END QUAKELANES
  
 	if ( talkingNPC ) {
@@ -14217,6 +14230,12 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 		currentenemylist.Append(actor);
 	}
 
+	//Make sure everything's set to dead
+	for (int i = 1; i <= 3; i++) {
+		hud->SetStateBool(va("pc%d_alive", i), false);
+		hud->SetStateBool(va("ec%d_alive", i), false);
+	}
+
 	if (playerMovesFirst) {
 		hud->SetStateString("currentMover", "Your Turn");
 		currentmover = true;
@@ -14239,9 +14258,11 @@ void idPlayer::endQLBattle( void ) {
 	currentenemylist.Clear();
 
 	for (int i = 1; i <= 3; i++) {
+		hud->SetStateBool(va("pc%d_alive", i), false);
 		hud->SetStateString(va("pc%d_title", i), "");
 		hud->SetStateFloat(va("pc%d_health", i), 0);
 		hud->SetStateFloat(va("pc%d_attack", i), 0);
+		hud->SetStateBool(va("ec%d_alive", i), false);
 		hud->SetStateString(va("ec%d_title", i), "");
 		hud->SetStateFloat(va("ec%d_health", i), 0);
 		hud->SetStateFloat(va("ec%d_attack", i), 0);
@@ -14322,7 +14343,7 @@ void idPlayer::enablenpcs( void ) {
 	}
 	
 }
-
+/*
 void idPlayer::toggleCurrentMover( void ) {
 	currentmover ^= 1;
 	if (currentmover) {
@@ -14333,6 +14354,12 @@ void idPlayer::toggleCurrentMover( void ) {
 	}
 }
 
+void idPlayer::setNextTurnTime( void ) {
+	//This is the minumum ammount of time between turns
+	//Added to try and fix crashing
+	nextTurnTime = gameLocal.time + 1500;
+}
+
 void idPlayer::checkForWinner( void ) {
 	return;
 }
@@ -14340,5 +14367,5 @@ void idPlayer::checkForWinner( void ) {
 void idPlayer::evaluateDamage( void ) {
 	return;
 }
-
+*/
 //END QUAKELANES
