@@ -801,6 +801,8 @@ public:
 //----------------------------//
 //Quakelanes - Eric Margadonna//
 //----------------------------//
+//This has a lot of variables and functions that should probably be in their own 
+//manager class of some sort but it's late, I'm tired, and this is due tomorrow
 	
 	//Game Cards
 	bool					ec1;
@@ -816,15 +818,20 @@ public:
 	bool					gameOver;
 	bool					playerWon;
 	bool					turnOver;
+
 	float					livesleft;
+
 	int						mindamagemod;//FUT
 	int						minhealthmod;//URE
 	int						turnnumber;
-	int						nextTurnTime;
+	int						delayMoveTime;
+	int						nextGameTime;
+
+	int						playerNumCards;
+	int						enemyNumCards;
 
 	idList<idActor*>		currentenemylist;
 	
-
 	void					toggleQLHelp( void );
 	void					runQLBattle( bool playerMovesFirst );
 	void					disablenpcs( void );
@@ -835,7 +842,9 @@ public:
 	void					toggleCurrentMover( void );
 	void					checkForWinner( void );
 	void					evaluateDamage( void );
-	void					setNextTurnTime( void );
+	void					setDelayTime( void );
+	void					calcNextGameTime( void );
+	void					killCard( bool playerCard, int cardNum );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );
