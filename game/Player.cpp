@@ -1903,6 +1903,7 @@ void idPlayer::Spawn( void ) {
 			numDeadEnemyCards = 0;
 			livesleft = 4;
 			gamesPlayed = 0;
+			nextGameTime = 0;
 		}
 
 		// clear votes
@@ -9318,6 +9319,8 @@ void idPlayer::Think( void ) {
 		//have to continually disable the npcs becuase sometimes they spawn
 		//while in a battle and aren't frozen
 
+		
+
 		//Check for gameover condition
 		if (gameOver) {
 			if (!playerWon) {
@@ -9334,65 +9337,73 @@ void idPlayer::Think( void ) {
 
 		turnOver = false;
 
-		if (gameLocal.time < delayMoveTime && turnnumber!=1) {
-			return;
-		}
+		//Make sure gui is up to date
+		int enemyCardsLeft = numEnemyCards - getNumActiveCards(false) - numDeadEnemyCards;
+		int playerCardsLeft = numPlayerCards - getNumActiveCards(true) - numDeadPlayerCards;
+		hud->SetStateInt("numEnemyCards", enemyCardsLeft);
+		hud->SetStateInt("numPlayerCards", playerCardsLeft );
+
+		//if (gameLocal.time < delayMoveTime && turnnumber!=1) {
+		//	return;
+		//}
+
+		bool hasCardsInDeck;
 
 		//Player's Turn
 		if (currentmover){
-			if (numDeadPlayerCards + getNumActiveCards(true) < numPlayerCards) {
-				if (gameLocal.usercmds) {
-					//grab the user input
-					usercmd = gameLocal.usercmds[entityNumber];
-					buttonMask &= usercmd.buttons;
-					usercmd.buttons &= ~buttonMask;
-
-					if (usercmd.rightmove < 0) //A
+			hasCardsInDeck = (numDeadPlayerCards < numPlayerCards);
+			if (gameLocal.usercmds) {
+				//grab the user input
+				usercmd = gameLocal.usercmds[entityNumber];
+				buttonMask &= usercmd.buttons;
+				usercmd.buttons &= ~buttonMask;
+				if (hasCardsInDeck) {
+					if (usercmd.rightmove < 0 && !turnOver) //A
 					{
 						pc1 = true;
-						hud->SetStateString("pc1_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
+						hud->SetStateString("pc1_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards)));
 						hud->SetStateInt("pc1_health", gameLocal.random.RandomInt(5 + minhealthmod) + 1);
 						hud->SetStateInt("pc1_attack", gameLocal.random.RandomInt(5 + mindamagemod) + 1);
 
 						turnOver = true;
 					}
-					if (usercmd.forwardmove > 0) //W
+					if (usercmd.forwardmove > 0 && !turnOver) //W
 					{
 						pc2 = true;
-						hud->SetStateString("pc2_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
-						hud->SetStateInt("pc2_health", gameLocal.random.RandomInt(5 + minhealthmod));
-						hud->SetStateInt("pc2_attack", gameLocal.random.RandomInt(5 + mindamagemod));
+						hud->SetStateString("pc2_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards)));
+						hud->SetStateInt("pc2_health", gameLocal.random.RandomInt(5 + minhealthmod) + 1);
+						hud->SetStateInt("pc2_attack", gameLocal.random.RandomInt(5 + mindamagemod) + 1);
 
 						turnOver = true;
 					}
-					if (usercmd.rightmove > 0) //D
+					if (usercmd.rightmove > 0 && !turnOver) //D
 					{
 						pc3 = true;
-						hud->SetStateString("pc3_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
-						hud->SetStateInt("pc3_health", gameLocal.random.RandomInt(5 + minhealthmod));
-						hud->SetStateInt("pc3_attack", gameLocal.random.RandomInt(5 + mindamagemod));
+						hud->SetStateString("pc3_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards)));
+						hud->SetStateInt("pc3_health", gameLocal.random.RandomInt(5 + minhealthmod) + 1);
+						hud->SetStateInt("pc3_attack", gameLocal.random.RandomInt(5 + mindamagemod) + 1);
 
 						turnOver = true;
 					}
-					/*
-					if (usercmd.forwardmove < 0) //S
-					{
-
-					}
-					*/
-					if (usercmd.upmove > 0) //Spacebar
-					{
-						turnOver = true;
-					}
-
 				}
-			}else { turnOver = true; }
+				if (usercmd.forwardmove < 0 && getNumActiveCards(true) > 0) //S
+				{
+					shiftCards(true);
+					turnOver = true;
+				}
+				
+				if (usercmd.upmove > 0) //Spacebar
+				{
+					turnOver = true;
+				}
+			}
 		}
 
 		//Enemy's Turn
 		if (!currentmover) {
 			//Check for empty slots, and fill one if we can
-			if(numDeadEnemyCards + getNumActiveCards(false) < numEnemyCards){
+			hasCardsInDeck = numDeadEnemyCards + getNumActiveCards(false) < numEnemyCards;
+			if(hasCardsInDeck){
 				if (!ec1 && !turnOver) {
 					hud->SetStateString("ec1_title", "Strogg");
 					hud->SetStateInt("ec1_health", 3);
@@ -9417,12 +9428,12 @@ void idPlayer::Think( void ) {
 			}
 			else {
 				//What do we do if all of our slots are filled or we're out of cards?
-				//Shift Cards?
+				shiftCards(false);
 				turnOver = true;
 			}
-			
 		}
 
+		//At the end of each Think Tick, check if the turn has concluded
 		if(turnOver){
 			turnnumber++;
 			setDelayTime();
@@ -14377,6 +14388,7 @@ void idPlayer::killEnemies( void ) {
 		//For each enemy, kill and ragdoll them 
 		actor->SetState("State_Killed");
 		actor->StartRagdoll();
+		//actor->
 	}
 }
 
@@ -14465,6 +14477,12 @@ void idPlayer::checkForWinner( void ) {
 	if (numDeadEnemyCards >= numEnemyCards) {
 		gameOver = true;
 		playerWon = true;
+		return;
+	}
+	if (numDeadPlayerCards >= numPlayerCards + deckmod) {
+		gameOver = true;
+		playerWon = false;
+		return;
 	}
 }
 
@@ -14489,16 +14507,16 @@ void idPlayer::evaluateDamage( void ) {
 			hud->SetStateInt("ec1_health", enemyHealth-playerDamage);
 			//gameLocal.Printf("1st pc attack evaluated\n");
 		}
+
 		//enemy attack
 		if (enemyDamage >= playerHealth) {
 			killCard(true, 1);
 		}
 		else {
-			hud->SetStateInt("pc1_health", enemyHealth - playerDamage);
+			hud->SetStateInt("pc1_health", playerHealth - enemyDamage);
 			//gameLocal.Printf("1st ec attack evaluated\n");
 		}
 	}
-	//else { gameLocal.Printf("eval for 1st card failed\n"); }
 
 	if (ec2 && pc2) {
 		enemyHealth = hud->GetStateInt("ec2_health");
@@ -14518,9 +14536,8 @@ void idPlayer::evaluateDamage( void ) {
 			killCard(true, 2);
 		}
 		else {
-			hud->SetStateInt("pc2_health", enemyHealth - playerDamage);
+			hud->SetStateInt("pc2_health", playerHealth - enemyDamage);
 		}
-
 	}
 
 	if (ec3 && pc3) {
@@ -14541,7 +14558,258 @@ void idPlayer::evaluateDamage( void ) {
 			killCard(true, 3);
 		}
 		else {
-			hud->SetStateInt("pc3_health", enemyHealth - playerDamage);
+			hud->SetStateInt("pc3_health", playerHealth - enemyDamage);
+		}
+	}
+}
+
+void idPlayer::shiftCards(bool player) {
+	if (player) {
+		if(getNumActiveCards(true)==3){
+			const char* temptitle;
+			int temphealth;
+			int	tempattack;
+
+			//Store card 3 values
+			temptitle = hud->GetStateString("pc3_title");
+			temphealth = hud->GetStateInt("pc3_health");
+			tempattack = hud->GetStateInt("pc3_attack");
+
+			//card 2 -> 3
+			hud->SetStateString("pc3_title", hud->GetStateString("pc2_title"));
+			hud->SetStateInt("pc3_health", hud->GetStateInt("pc2_health"));
+			hud->SetStateInt("pc3_attack", hud->GetStateInt("pc2_attack"));
+
+			//card 1 -> 2
+			hud->SetStateString("pc2_title", hud->GetStateString("pc1_title"));
+			hud->SetStateInt("pc2_health", hud->GetStateInt("pc1_health"));
+			hud->SetStateInt("pc2_attack", hud->GetStateInt("pc1_attack"));
+
+			//card 3 -> 1
+			hud->SetStateString("pc1_title", temptitle);
+			hud->SetStateInt("pc1_health", temphealth);
+			hud->SetStateInt("pc1_attack", tempattack);
+		}
+		else if (getNumActiveCards(true) == 2) {
+			if (pc1 && pc2) {
+				//card 2 -> 3
+				hud->SetStateString("pc3_title", hud->GetStateString("pc2_title"));
+				hud->SetStateInt("pc3_health", hud->GetStateInt("pc2_health"));
+				hud->SetStateInt("pc3_attack", hud->GetStateInt("pc2_attack"));
+				pc3 = true;
+
+				//card 1 -> 2
+				hud->SetStateString("pc2_title", hud->GetStateString("pc1_title"));
+				hud->SetStateInt("pc2_health", hud->GetStateInt("pc1_health"));
+				hud->SetStateInt("pc2_attack", hud->GetStateInt("pc1_attack"));
+
+				//Clear card 1
+				hud->SetStateString("pc1_title", "");
+				hud->SetStateString("pc1_health", "");
+				hud->SetStateString("pc1_attack", "");
+				pc1 = false;
+			}
+			else if (pc1 && pc3) {
+				//Card 1 -> 2
+				hud->SetStateString("pc2_title", hud->GetStateString("pc1_title"));
+				hud->SetStateInt("pc2_health", hud->GetStateInt("pc1_health"));
+				hud->SetStateInt("pc2_attack", hud->GetStateInt("pc1_attack"));
+				pc2 = true;
+
+				//Card 3 -> 1
+				hud->SetStateString("pc1_title", hud->GetStateString("pc3_title"));
+				hud->SetStateInt("pc1_health", hud->GetStateInt("pc3_health"));
+				hud->SetStateInt("pc1_attack", hud->GetStateInt("pc3_attack"));
+
+				//Clear card 3
+				hud->SetStateString("pc3_title", "");
+				hud->SetStateString("pc3_health", "");
+				hud->SetStateString("pc3_attack", "");
+				pc3 = false;
+			}
+			else if (pc2 && pc3) {
+				//Card 3 -> 1
+				hud->SetStateString("pc1_title", hud->GetStateString("pc3_title"));
+				hud->SetStateInt("pc1_health", hud->GetStateInt("pc3_health"));
+				hud->SetStateInt("pc1_attack", hud->GetStateInt("pc3_attack"));
+				pc1 = true;
+
+				//Card 2 -> 3
+				hud->SetStateString("pc3_title", hud->GetStateString("pc2_title"));
+				hud->SetStateInt("pc3_health", hud->GetStateInt("pc2_health"));
+				hud->SetStateInt("pc3_attack", hud->GetStateInt("pc2_attack"));
+
+				//Clear card 2
+				hud->SetStateString("pc2_title", "");
+				hud->SetStateString("pc2_health", "");
+				hud->SetStateString("pc2_attack", "");
+				pc2 = false;
+			}
+		}
+		else if (getNumActiveCards(true) == 1) {
+			if (pc1) {
+				//Card 1 -> 2
+				hud->SetStateString("pc2_title", hud->GetStateString("pc1_title"));
+				hud->SetStateInt("pc2_health", hud->GetStateInt("pc1_health"));
+				hud->SetStateInt("pc2_attack", hud->GetStateInt("pc1_attack"));
+				pc2 = true;
+
+				//Clear card 1
+				hud->SetStateString("pc1_title", "");
+				hud->SetStateString("pc1_health", "");
+				hud->SetStateString("pc1_attack", "");
+				pc1 = false;
+			}
+			else if (pc2) {
+				//Card 2 -> 3
+				hud->SetStateString("pc3_title", hud->GetStateString("pc2_title"));
+				hud->SetStateInt("pc3_health", hud->GetStateInt("pc2_health"));
+				hud->SetStateInt("pc3_attack", hud->GetStateInt("pc2_attack"));
+				pc3 = true;
+
+				//Clear card 2
+				hud->SetStateString("pc2_title", "");
+				hud->SetStateString("pc2_health", "");
+				hud->SetStateString("pc2_attack", "");
+				pc2 = false;
+			}
+			else if (pc3) {
+				//Card 3 -> 1
+				hud->SetStateString("pc1_title", hud->GetStateString("pc3_title"));
+				hud->SetStateInt("pc1_health", hud->GetStateInt("pc3_health"));
+				hud->SetStateInt("pc1_attack", hud->GetStateInt("pc3_attack"));
+				pc1 = true;
+
+				//Clear card 3
+				hud->SetStateString("pc3_title", "");
+				hud->SetStateString("pc3_health", "");
+				hud->SetStateString("pc3_attack", "");
+				pc3 = false;
+			}
+		}
+	}
+	else {
+		if (getNumActiveCards(false) == 3) {
+			const char* temptitle;
+			int temphealth;
+			int	tempattack;
+
+			//Store card 3 values
+			temptitle = hud->GetStateString("ec3_title");
+			temphealth = hud->GetStateInt("ec3_health");
+			tempattack = hud->GetStateInt("ec3_attack");
+
+			//card 2 -> 3
+			hud->SetStateString("ec3_title", hud->GetStateString("ec2_title"));
+			hud->SetStateInt("ec3_health", hud->GetStateInt("ec2_health"));
+			hud->SetStateInt("ec3_attack", hud->GetStateInt("ec2_attack"));
+
+			//card 1 -> 2
+			hud->SetStateString("ec2_title", hud->GetStateString("ec1_title"));
+			hud->SetStateInt("ec2_health", hud->GetStateInt("ec1_health"));
+			hud->SetStateInt("ec2_attack", hud->GetStateInt("ec1_attack"));
+
+			//card 3 -> 1
+			hud->SetStateString("ec1_title", temptitle);
+			hud->SetStateInt("ec1_health", temphealth);
+			hud->SetStateInt("ec1_attack", tempattack);
+		}
+		else if (getNumActiveCards(false) == 2) {
+			if (ec1 && ec2) {
+				//card 2 -> 3
+				hud->SetStateString("ec3_title", hud->GetStateString("ec2_title"));
+				hud->SetStateInt("ec3_health", hud->GetStateInt("ec2_health"));
+				hud->SetStateInt("ec3_attack", hud->GetStateInt("ec2_attack"));
+				ec3 = true;
+
+				//card 1 -> 2
+				hud->SetStateString("ec2_title", hud->GetStateString("ec1_title"));
+				hud->SetStateInt("ec2_health", hud->GetStateInt("ec1_health"));
+				hud->SetStateInt("ec2_attack", hud->GetStateInt("ec1_attack"));
+
+				//Clear card 1
+				hud->SetStateString("ec1_title", "");
+				hud->SetStateString("ec1_health", "");
+				hud->SetStateString("ec1_attack", "");
+				ec1 = false;
+			}
+			else if (ec1 && ec3) {
+				//Card 1 -> 2
+				hud->SetStateString("ec2_title", hud->GetStateString("ec1_title"));
+				hud->SetStateInt("ec2_health", hud->GetStateInt("ec1_health"));
+				hud->SetStateInt("ec2_attack", hud->GetStateInt("ec1_attack"));
+				ec2 = true;
+
+				//Card 3 -> 1
+				hud->SetStateString("ec1_title", hud->GetStateString("ec3_title"));
+				hud->SetStateInt("ec1_health", hud->GetStateInt("ec3_health"));
+				hud->SetStateInt("ec1_attack", hud->GetStateInt("ec3_attack"));
+
+				//Clear card 3
+				hud->SetStateString("ec3_title", "");
+				hud->SetStateString("ec3_health", "");
+				hud->SetStateString("ec3_attack", "");
+				ec3 = false;
+			}
+			else if (ec2 && ec3) {
+				//Card 3 -> 1
+				hud->SetStateString("ec1_title", hud->GetStateString("ec3_title"));
+				hud->SetStateInt("ec1_health", hud->GetStateInt("ec3_health"));
+				hud->SetStateInt("ec1_attack", hud->GetStateInt("ec3_attack"));
+				ec1 = true;
+
+				//Card 2 -> 3
+				hud->SetStateString("ec3_title", hud->GetStateString("ec2_title"));
+				hud->SetStateInt("ec3_health", hud->GetStateInt("ec2_health"));
+				hud->SetStateInt("ec3_attack", hud->GetStateInt("ec2_attack"));
+
+				//Clear card 2
+				hud->SetStateString("ec2_title", "");
+				hud->SetStateString("ec2_health", "");
+				hud->SetStateString("ec2_attack", "");
+				ec2 = false;
+			}
+		}
+		else if (getNumActiveCards(false) == 1) {
+			if (ec1) {
+				//Card 1 -> 2
+				hud->SetStateString("ec2_title", hud->GetStateString("ec1_title"));
+				hud->SetStateInt("ec2_health", hud->GetStateInt("ec1_health"));
+				hud->SetStateInt("ec2_attack", hud->GetStateInt("ec1_attack"));
+				ec2 = true;
+
+				//Clear card 1
+				hud->SetStateString("ec1_title", "");
+				hud->SetStateString("ec1_health", "");
+				hud->SetStateString("ec1_attack", "");
+				ec1 = false;
+			}
+			else if (ec2) {
+				//Card 2 -> 3
+				hud->SetStateString("ec3_title", hud->GetStateString("ec2_title"));
+				hud->SetStateInt("ec3_health", hud->GetStateInt("ec2_health"));
+				hud->SetStateInt("ec3_attack", hud->GetStateInt("ec2_attack"));
+				ec3 = true;
+
+				//Clear card 2
+				hud->SetStateString("ec2_title", "");
+				hud->SetStateString("ec2_health", "");
+				hud->SetStateString("ec2_attack", "");
+				ec2 = false;
+			}
+			else if (ec3) {
+				//Card 3 -> 1
+				hud->SetStateString("ec1_title", hud->GetStateString("ec3_title"));
+				hud->SetStateInt("ec1_health", hud->GetStateInt("ec3_health"));
+				hud->SetStateInt("ec1_attack", hud->GetStateInt("ec3_attack"));
+				ec1 = true;
+
+				//Clear card 3
+				hud->SetStateString("ec3_title", "");
+				hud->SetStateString("ec3_health", "");
+				hud->SetStateString("ec3_attack", "");
+				ec3 = false;
+			}
 		}
 	}
 }

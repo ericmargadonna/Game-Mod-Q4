@@ -1572,7 +1572,9 @@ bool idAI::Pain( idEntity *inflictor, idEntity *attacker, int damage, const idVe
 		//Whenever anything gets damaged, we check if it's an AI Strogg as
 		//well as whether or not the player was the attacker
 		//If this checks out we start our card game
-		if (team == AITEAM_STROGG && attacker->IsType(idPlayer::GetClassType())) {
+		if (team == AITEAM_STROGG 
+			&& attacker->IsType(idPlayer::GetClassType()) 
+			&& gameLocal.time > gameLocal.GetLocalPlayer()->nextGameTime) {
 			gameLocal.GetLocalPlayer()->runQLBattle( true );
 		}
 
