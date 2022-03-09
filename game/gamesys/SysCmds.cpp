@@ -3025,15 +3025,17 @@ void Cmd_ShuffleTeams_f( const idCmdArgs& args ) {
 
 void QLHelp( const idCmdArgs& args ) {
 	idPlayer* player = gameLocal.GetLocalPlayer();
-	if (player) {
+	if (player && !player->incardbattle) {
 		player->toggleQLHelp();
 	}
 }
 
 void QLAbort( const idCmdArgs& args ) {
-	gameLocal.GetLocalPlayer()->QLAbort();
+	idPlayer * player = gameLocal.GetLocalPlayer();
+	if (player && player->incardbattle) {
+		gameLocal.GetLocalPlayer()->endQLBattle(true);
+	}
 }
-
 
 #ifndef _FINAL
 void Cmd_ClientOverflowReliable_f( const idCmdArgs& args ) {

@@ -1897,7 +1897,12 @@ void idPlayer::Spawn( void ) {
 			//Eric Margadonna - Also set up my Quakelanes stuff
 			helpmenuopen = false;
 			incardbattle = false;
+			numPlayerCards = 0;
+			numEnemyCards = 0;
+			numDeadPlayerCards = 0;
+			numDeadEnemyCards = 0;
 			livesleft = 4;
+			gamesPlayed = 0;
 		}
 
 		// clear votes
@@ -9334,47 +9339,54 @@ void idPlayer::Think( void ) {
 		}
 
 		//Player's Turn
-		if (currentmover) {
-			if (gameLocal.usercmds) {
+		if (currentmover){
+			if (numDeadPlayerCards + getNumActiveCards(true) < numPlayerCards) {
+				if (gameLocal.usercmds) {
+					//grab the user input
+					usercmd = gameLocal.usercmds[entityNumber];
+					buttonMask &= usercmd.buttons;
+					usercmd.buttons &= ~buttonMask;
 
-				//grab the user input
-				usercmd = gameLocal.usercmds[entityNumber];
-				buttonMask &= usercmd.buttons;
-				usercmd.buttons &= ~buttonMask;
+					if (usercmd.rightmove < 0) //A
+					{
+						pc1 = true;
+						hud->SetStateString("pc1_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
+						hud->SetStateInt("pc1_health", gameLocal.random.RandomInt(5 + minhealthmod) + 1);
+						hud->SetStateInt("pc1_attack", gameLocal.random.RandomInt(5 + mindamagemod) + 1);
 
-				if (usercmd.rightmove < 0) //A
-				{
-					pc1 = true;
-					hud->SetStateString("pc1_title", "Marine");
-					hud->SetStateInt("pc1_health", 6);
-					hud->SetStateInt("pc1_attack", 3);
+						turnOver = true;
+					}
+					if (usercmd.forwardmove > 0) //W
+					{
+						pc2 = true;
+						hud->SetStateString("pc2_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
+						hud->SetStateInt("pc2_health", gameLocal.random.RandomInt(5 + minhealthmod));
+						hud->SetStateInt("pc2_attack", gameLocal.random.RandomInt(5 + mindamagemod));
 
-					turnOver = true;
+						turnOver = true;
+					}
+					if (usercmd.rightmove > 0) //D
+					{
+						pc3 = true;
+						hud->SetStateString("pc3_title", va("Marine%d", (getNumActiveCards(true) + numDeadPlayerCards )));
+						hud->SetStateInt("pc3_health", gameLocal.random.RandomInt(5 + minhealthmod));
+						hud->SetStateInt("pc3_attack", gameLocal.random.RandomInt(5 + mindamagemod));
+
+						turnOver = true;
+					}
+					/*
+					if (usercmd.forwardmove < 0) //S
+					{
+
+					}
+					*/
+					if (usercmd.upmove > 0) //Spacebar
+					{
+						turnOver = true;
+					}
+
 				}
-				if (usercmd.forwardmove > 0) //W
-				{
-					pc2 = true;
-					hud->SetStateString("pc2_title", "Marine");
-					hud->SetStateInt("pc2_health", 5);
-					hud->SetStateInt("pc2_attack", 1);
-
-					turnOver = true;
-				}
-				if (usercmd.rightmove > 0) //D
-				{
-					pc3 = true;
-					hud->SetStateString("pc3_title", "Marine");
-					hud->SetStateInt("pc3_health", 2);
-					hud->SetStateInt("pc3_attack", 4);
-
-					turnOver = true;
-				}
-				if (usercmd.upmove > 0) //Spacebar
-				{
-					turnOver = true;
-				}
-				
-			}
+			}else { turnOver = true; }
 		}
 
 		//Enemy's Turn
@@ -14274,14 +14286,22 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 		currentenemylist.Append(actor);
 	}
 	//gameLocal.Printf( va("Battle started with %d enemies\n", currentenemylist.Num()) );
-	numEnemyCards = currentenemylist.Num();
-
+	
 	ec1 = false;
 	ec2 = false;
 	ec3 = false;
 	pc1 = false;
 	pc2 = false;
 	pc3 = false;
+
+	for (int i = 1; i <= 3; i++) {
+		hud->SetStateString(va("pc%d_title", i), "");
+		hud->SetStateString(va("pc%d_health", i), "");
+		hud->SetStateString(va("pc%d_attack", i), "");
+		hud->SetStateString(va("ec%d_title", i), "");
+		hud->SetStateString(va("ec%d_health", i), "");
+		hud->SetStateString(va("ec%d_attack", i), "");
+	}
 
 	if (playerMovesFirst) {
 		hud->SetStateString("currentMover", "Your Turn");
@@ -14294,38 +14314,29 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 
 	calcNextGameTime();
 
+	numEnemyCards = currentenemylist.Num();
+	numPlayerCards = 5 + deckmod;
 	gameOver = false;
 	playerWon = false;
 	turnnumber = 1;
+	numDeadPlayerCards = 0;
 	numDeadEnemyCards = 0;
+	gamesPlayed++;
 
 	hud->HandleNamedEvent("showQLBattle");
 	incardbattle = true;
 }
 
-void idPlayer::endQLBattle( void ) {
+void idPlayer::endQLBattle( bool abort ) {
 	hud->HandleNamedEvent("hideQLBattle");
-	killEnemies();
-	enablenpcs();
-	currentenemylist.Clear();
-
-	for (int i = 1; i <= 3; i++) {
-		hud->SetStateString(va("pc%d_title", i), "");
-		hud->SetStateString(va("pc%d_health", i), "");
-		hud->SetStateString(va("pc%d_attack", i), "");
-		hud->SetStateString(va("ec%d_title", i), "");
-		hud->SetStateString(va("ec%d_health", i), "");
-		hud->SetStateString(va("ec%d_attack", i), "");
+	if(!abort){
+		killEnemies();
 	}
-	
-	incardbattle = false;
-}
-
-void idPlayer::QLAbort( void ) {
-	hud->HandleNamedEvent("hideQLBattle");
-	incardbattle = false;
 	enablenpcs();
 	currentenemylist.Clear();
+	gameLocal.Printf(va("Exiting QL - %d Enemies in list\n", currentenemylist.Num()));
+
+	incardbattle = false;
 }
 
 void idPlayer::disablenpcs( void ) {
@@ -14394,38 +14405,38 @@ void idPlayer::enablenpcs( void ) {
 	
 }
 
-void idPlayer::killCard(bool playerCard, int cardNum) {
-	if (cardNum > 3 || cardNum < 1) {
+void idPlayer::killCard(bool playerCard, int cardPos) {
+	if (cardPos > 3 || cardPos < 1) {
 		gameLocal.Printf("killcard RETURNED\n");
 		return;
 	}
 
 	if (playerCard) {
-		hud->SetStateString(va("pc%d_title", cardNum), "");
-		hud->SetStateString(va("pc%d_health", cardNum), "");
-		hud->SetStateString(va("pc%d_attack", cardNum), "");
-		if (cardNum == 1) {
+		hud->SetStateString(va("pc%d_title", cardPos), "");
+		hud->SetStateString(va("pc%d_health", cardPos), "");
+		hud->SetStateString(va("pc%d_attack", cardPos), "");
+		if (cardPos == 1) {
 			pc1 = false;
 		}
-		if (cardNum == 2) {
+		if (cardPos == 2) {
 			pc2 = false;
 		}
-		if (cardNum == 3) {
+		if (cardPos == 3) {
 			pc3 = false;
 		}
 		numDeadPlayerCards++;
 	}
 	else {
-		hud->SetStateString(va("ec%d_title", cardNum), "");
-		hud->SetStateString(va("ec%d_health", cardNum), "");
-		hud->SetStateString(va("ec%d_attack", cardNum), "");
-		if (cardNum == 1) {
+		hud->SetStateString(va("ec%d_title", cardPos), "");
+		hud->SetStateString(va("ec%d_health", cardPos), "");
+		hud->SetStateString(va("ec%d_attack", cardPos), "");
+		if (cardPos == 1) {
 			ec1 = false;
 		}
-		if (cardNum == 2) {
+		if (cardPos == 2) {
 			ec2 = false;
 		}
-		if (cardNum == 3) {
+		if (cardPos == 3) {
 			ec3 = false;
 		}
 		numDeadEnemyCards++;
@@ -14476,7 +14487,7 @@ void idPlayer::evaluateDamage( void ) {
 		}
 		else {
 			hud->SetStateInt("ec1_health", enemyHealth-playerDamage);
-			gameLocal.Printf("1st pc attack evaluated");
+			//gameLocal.Printf("1st pc attack evaluated\n");
 		}
 		//enemy attack
 		if (enemyDamage >= playerHealth) {
@@ -14484,7 +14495,7 @@ void idPlayer::evaluateDamage( void ) {
 		}
 		else {
 			hud->SetStateInt("pc1_health", enemyHealth - playerDamage);
-			gameLocal.Printf("1st ec attack evaluated");
+			//gameLocal.Printf("1st ec attack evaluated\n");
 		}
 	}
 	//else { gameLocal.Printf("eval for 1st card failed\n"); }

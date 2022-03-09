@@ -821,9 +821,11 @@ public:
 
 	float					livesleft;
 
-	int						mindamagemod;//FUT
-	int						minhealthmod;//URE
+	int						mindamagemod = 0;
+	int						minhealthmod = 0;
+	int						deckmod = 0;
 
+	int						gamesPlayed;
 	int						turnnumber;
 	int						delayMoveTime;
 	int						nextGameTime;
@@ -839,14 +841,13 @@ public:
 	void					disablenpcs( void );
 	void					killEnemies( void );
 	void					enablenpcs( void );
-	void					endQLBattle( void );
-	void					QLAbort( void );
+	void					endQLBattle( bool abort = false );
 	void					toggleCurrentMover( void );
 	void					checkForWinner( void );
 	void					evaluateDamage( void );
 	void					setDelayTime( void );
 	void					calcNextGameTime( void );
-	void					killCard( bool playerCard, int cardNum );
+	void					killCard( bool playerCard, int cardPos );
 	int						getNumActiveCards( bool player );
 
 protected:
