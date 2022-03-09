@@ -801,20 +801,29 @@ public:
 //----------------------------//
 //Quakelanes - Eric Margadonna//
 //----------------------------//
+	
+	//Game Cards
+	bool					ec1;
+	bool					ec2;
+	bool					ec3;
+	bool					pc1;
+	bool					pc2;
+	bool					pc3;
+
 	bool					helpmenuopen;
 	bool					incardbattle;
 	bool					currentmover;
 	bool					gameOver;
 	bool					playerWon;
+	bool					turnOver;
 	float					livesleft;
 	int						mindamagemod;//FUT
 	int						minhealthmod;//URE
 	int						turnnumber;
-	//int						nextTurnTime;
+	int						nextTurnTime;
 
 	idList<idActor*>		currentenemylist;
-	//idList<bool>			enemiesAlive;
-	//Probably don't need this
+	
 
 	void					toggleQLHelp( void );
 	void					runQLBattle( bool playerMovesFirst );
@@ -823,10 +832,10 @@ public:
 	void					enablenpcs( void );
 	void					endQLBattle( void );
 	void					QLAbort( void );
-	//void					toggleCurrentMover( void );
-	//void					checkForWinner( void );
-	//void					evaluateDamage( void );
-	//void					setNextTurnTime( void );
+	void					toggleCurrentMover( void );
+	void					checkForWinner( void );
+	void					evaluateDamage( void );
+	void					setNextTurnTime( void );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );
