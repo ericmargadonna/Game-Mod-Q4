@@ -823,12 +823,14 @@ public:
 
 	int						mindamagemod;//FUT
 	int						minhealthmod;//URE
+
 	int						turnnumber;
 	int						delayMoveTime;
 	int						nextGameTime;
-
-	int						playerNumCards;
-	int						enemyNumCards;
+	int						numPlayerCards;
+	int						numEnemyCards;
+	int						numDeadPlayerCards;
+	int						numDeadEnemyCards;
 
 	idList<idActor*>		currentenemylist;
 	
@@ -845,6 +847,7 @@ public:
 	void					setDelayTime( void );
 	void					calcNextGameTime( void );
 	void					killCard( bool playerCard, int cardNum );
+	int						getNumActiveCards( bool player );
 
 protected:
 	void					SetupHead( const char* modelKeyName = "", idVec3 headOffset = idVec3(0, 0, 0) );

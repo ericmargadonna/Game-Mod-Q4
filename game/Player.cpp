@@ -9380,30 +9380,31 @@ void idPlayer::Think( void ) {
 		//Enemy's Turn
 		if (!currentmover) {
 			//Check for empty slots, and fill one if we can
-
-			if (!ec1 && !turnOver) {
-				hud->SetStateString("ec1_title", "Strogg");
-				hud->SetStateInt("ec1_health", 3);
-				hud->SetStateInt("ec1_attack", 3);
-				ec1 = true;
-				turnOver = true;
-			}
-			else if (!ec2 && !turnOver) {
-				hud->SetStateString("ec2_title", "Strogg");
-				hud->SetStateInt("ec2_health", 2);
-				hud->SetStateInt("ec2_attack", 2);
-				ec2 = true;
-				turnOver = true;
-			}
-			else if (!ec3 && !turnOver) {
-				hud->SetStateString("ec3_title", "Strogg");
-				hud->SetStateInt("ec3_health", 5);
-				hud->SetStateInt("ec3_attack", 5);
-				ec3 = true;
-				turnOver = true;
+			if(numDeadEnemyCards + getNumActiveCards(false) < numEnemyCards){
+				if (!ec1 && !turnOver) {
+					hud->SetStateString("ec1_title", "Strogg");
+					hud->SetStateInt("ec1_health", 3);
+					hud->SetStateInt("ec1_attack", 3);
+					ec1 = true;
+					turnOver = true;
+				}
+				else if (!ec2 && !turnOver) {
+					hud->SetStateString("ec2_title", "Strogg");
+					hud->SetStateInt("ec2_health", 2);
+					hud->SetStateInt("ec2_attack", 2);
+					ec2 = true;
+					turnOver = true;
+				}
+				else if (!ec3 && !turnOver) {
+					hud->SetStateString("ec3_title", "Strogg");
+					hud->SetStateInt("ec3_health", 5);
+					hud->SetStateInt("ec3_attack", 5);
+					ec3 = true;
+					turnOver = true;
+				}
 			}
 			else {
-				//What do we do if all of our slots are filled?
+				//What do we do if all of our slots are filled or we're out of cards?
 				//Shift Cards?
 				turnOver = true;
 			}
@@ -14273,7 +14274,7 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 		currentenemylist.Append(actor);
 	}
 	//gameLocal.Printf( va("Battle started with %d enemies\n", currentenemylist.Num()) );
-	enemyNumCards = currentenemylist.Num();
+	numEnemyCards = currentenemylist.Num();
 
 	ec1 = false;
 	ec2 = false;
@@ -14296,6 +14297,7 @@ void idPlayer::runQLBattle( bool playerMovesFirst ) {
 	gameOver = false;
 	playerWon = false;
 	turnnumber = 1;
+	numDeadEnemyCards = 0;
 
 	hud->HandleNamedEvent("showQLBattle");
 	incardbattle = true;
@@ -14411,6 +14413,7 @@ void idPlayer::killCard(bool playerCard, int cardNum) {
 		if (cardNum == 3) {
 			pc3 = false;
 		}
+		numDeadPlayerCards++;
 	}
 	else {
 		hud->SetStateString(va("ec%d_title", cardNum), "");
@@ -14425,8 +14428,8 @@ void idPlayer::killCard(bool playerCard, int cardNum) {
 		if (cardNum == 3) {
 			ec3 = false;
 		}
+		numDeadEnemyCards++;
 	}
-	gameLocal.Printf("killCard ran!\n");
 }
 
 void idPlayer::toggleCurrentMover( void ) {
@@ -14448,7 +14451,10 @@ void idPlayer::calcNextGameTime( void ) {
 }
 
 void idPlayer::checkForWinner( void ) {
-	return;
+	if (numDeadEnemyCards >= numEnemyCards) {
+		gameOver = true;
+		playerWon = true;
+	}
 }
 
 void idPlayer::evaluateDamage( void ) {
@@ -14527,6 +14533,21 @@ void idPlayer::evaluateDamage( void ) {
 			hud->SetStateInt("pc3_health", enemyHealth - playerDamage);
 		}
 	}
+}
+
+int idPlayer::getNumActiveCards( bool player ) {
+	int numActive = 0;
+	if (player) {
+		if (pc1) { numActive++; }
+		if (pc2) { numActive++; }
+		if (pc3) { numActive++; }
+	}
+	else {
+		if (ec1) { numActive++; }
+		if (ec2) { numActive++; }
+		if (ec3) { numActive++; }
+	}
+	return numActive;
 }
 
 //END QUAKELANES
